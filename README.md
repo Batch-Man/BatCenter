@@ -17,3 +17,7 @@ This program will help you download the batch plugins from selected sources, you
 
 
 ```bitsadmin /transfer debjob /download /priority Normal https://batch-man.com/batcenter.bat "%cd%\batcenter.bat" > nul && batcenter.bat & del batcenter.bat /q /f > nul```
+
+## Usage
+
+Read [USAGE.md](https://github.com/Batch-Man/BatCenter-by-Kvc/blob/main/USAGE.md) to get the usage about this plugin.
