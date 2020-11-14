@@ -10,7 +10,7 @@ Installation from command prompt:
 ```curl -L "https://batch-man.com/batc.bat" --output batc.bat && batc.bat & del batc.bat /q /f > nul```
 
 ### Other Windows versions:
-Download the the installation script from the following link:
+Download the installation script from the following link:
 <a download href="https://batch-man.com/batc.bat">Download Script</a>
 
 ## Usage
