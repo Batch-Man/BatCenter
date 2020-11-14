@@ -6,7 +6,7 @@ This utility will help you to search, download, install, view the batch plugins 
 There is a script available that can directly download BatCenter from the main server(batch-man.com), you can either **use the installation script to install BatCenter in your computer** or ***you can install it directly via your command prompt***. Do as per your OS.
 
 ### Windows 10:
-Installation from command prompt:
+Installation from command prompt:  
 ```curl -L "https://batch-man.com/batc.bat" --output batc.bat && batc.bat & del batc.bat /q /f > nul```
 
 ### Other Windows versions:
