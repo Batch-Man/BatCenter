@@ -11,7 +11,7 @@ Installation from command prompt:
 
 ### Other Windows versions:
 Download the installation script from the following link:
-<a download href="https://batch-man.com/batc.bat">Download Script</a>
+<a href="https://batch-man.com/batc.bat" download>Download Script</a>
 
 ## Usage
 Read [USAGE.md](https://github.com/Batch-Man/BatCenter-by-Kvc/blob/main/USAGE.md) to get the usage about this plugin.
