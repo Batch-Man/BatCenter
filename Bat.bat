@@ -277,6 +277,8 @@ REM Fixing a bug...
 Set _RepoOwner=!_RepoOwner:"=!
 Set _RepoLink=!_RepoLink:~9!
 
+Set _RepoDes=!_RepoDes:"=!
+
 REM If NOT Exist "Files\!_RepoOwner!.bmp" (
 REM 	Del /f /q "!Temp!\Tmp.Temp" >nul 2>nul
 REM 	Echo. Loading...
@@ -290,10 +292,10 @@ REM Fixing RepoName...
 For /f "tokens=1,2* delims=-" %%A in ("!_RepoName!") do (Set _RepoName=%%~B)
 
 REM Checking length of the Description...
-Call Getlen !_RepoDes!
+Call Getlen "!_RepoDes!"
 Set _Len=!Errorlevel!
 
-If !_Len! GEQ 50 (Set _RepoDes=!_RepoDes:~1,50!...)
+If !_Len! GEQ 50 (Set _RepoDes=!_RepoDes:~0,50!...)
 
 Echo. --------------------------------------------------------------------------
 Echo. Name:			!_RepoName:~1!
@@ -304,7 +306,7 @@ Echo. Updated-On:		!_RepoUpdate:~1,10!
 Echo. Branch:		!_RepoBranch:"=!
 Echo. License:		!_RepoLicense:"=!
 Echo. Size:			!_RepoSize! KBs
-Echo. Description:		!_RepoDes:"=!
+Echo. Description:		!_RepoDes!
 Echo. Link:			!_RepoLink:"=!
 Echo. -------------------------------------------------------------------------
 Echo. INSTALL THIS WITH: "bat install !_Index_Number!"
