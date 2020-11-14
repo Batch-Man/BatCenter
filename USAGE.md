@@ -75,12 +75,12 @@ Prints the current version of installed BatCenter.
 
 ___
 ___
-# Important:
+## Important
 If you are calling BatCenter directly from the CMD console, then you do not need to use the `call` before `bat`, you can skip to the shorter syntax as:  ``Bat Update``
 ___
 ___
 
- ### PLUGINS REQUIRED FOR THIS PROJECT...  {Already comes with the BatCenter Package}**
+ ### Plugins required**
  ```
  7za.exe 			by Igor Pavlov
  jq.exe 			        by stedolan 
