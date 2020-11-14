@@ -43,7 +43,7 @@ Downloads and installs the selected batch plugins in the current computer so tha
 **Syntax:** ``Call Bat Install [Local-ID | [Term1] [Term2] [Term3] ...]``  
 **Example:** ``Call Bat Install batbox 3.1``  -If only one unique result is found - then -> ***downloads and installs***  
 **Example:** ``Call Bat Install batbox 3.1 -y``  -Supresses any Confirmation from the prompt and shows Results  
-**Example**: ``Call Bat Install 10``  -uses Local-ID to target and downlaod the plugin to computer  (use ```bat detail 10``` to see details of it)
+**Example**: ``Call Bat Install 10``  -uses Local-ID to target and download the plugin to computer  (use ```bat detail 10``` to see details of it)
 ___
 
 ## 5. Detail
