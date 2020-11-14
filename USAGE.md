@@ -1,8 +1,8 @@
-### BatCenter supports the following parameters that you can use to install different batch plugins in your computer directly from CMD. You can find the complete technical help directly by calling _`Bat /?`_ in the cmd after installing BatCenter in your system.
+### BatCenter supports the following parameters that you can use to install different batch plugins in your computer directly from CMD. You can find the complete technical help directly by calling _`Bat /?`_ after installing BatCenter in your system.
 
-**[READ INSTALLATION HELP](https://github.com/Batch-Man/BatCenter/blob/main/README.md)** 
+**[Installation help](https://github.com/Batch-Man/BatCenter/blob/main/README.md)** 
 
-# BatCenter Commands:
+# Commands:
  This utility supports the following commands:
 
 ```
