@@ -2,6 +2,8 @@
 
 This utility will help you to search, download, install, view the batch plugins from selected sources, you can search and see details about them before downloading.
 
+<center><a href="https://ibb.co/nbNBY4p"><img src="https://i.ibb.co/G0498Gm/image.png" alt="image" border="0"></a></center>
+
 ## Installation  
 There is a script available that can directly download BatCenter from the main server(batch-man.com), you can either **use the installation script to install BatCenter in your computer** or ***you can install it directly via your command prompt***. Do as per your OS.
 
