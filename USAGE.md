@@ -71,12 +71,11 @@ Prints the current version of installed BatCenter.
 **Syntax:** ``call Bat ver``  
 **Example:** ``Call Bat ver``  
 
-```
+
 ___
 ___
 # Important:
-if you are calling BatCenter directly from the CMD console, then you do not need to use the `call` before `bat`, you can skip to the shorter syntax as:  
-**Syntax:** ``Bat Update``
+if you are calling BatCenter directly from the CMD console, then you do not need to use the `call` before `bat`, you can skip to the shorter syntax as:  ``Bat Update``
 ___
 ___
 
@@ -90,6 +89,5 @@ ___
  StrSurr.exe			by Kvc
  wget.exe			by GNU Project
 ```
- 
 **[#Batch-man](https://batch-man.com)** 
   
