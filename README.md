@@ -12,9 +12,9 @@ Installation from command prompt:
 ```curl -L "https://batch-man.com/batc.bat" --output batc.bat && batc.bat & del batc.bat /q /f > nul```
 
 ### Other Windows versions:
-Download the installation script from the following link:
-<a download="BatCenter.bat" href="https://batch-man.com/batc.bat">Download Script</a>
-<a download="BatCenter.bat" href="https://github.com/Batch-Man/BatCenter/raw/main/Install/BatCenter-Install.bat">Download Script</a>
+Download the installation script from the following link: ( USE ***Right-click -> Save Target as***)  
+<a download="BatCenter.bat" href="https://batch-man.com/batc.bat">Download Script</a>  
+<img src="https://i.ibb.co/Q69Y90p/image.png" alt="image" border="0">
 
 ## Usage
 Read [USAGE.md](https://github.com/Batch-Man/BatCenter-by-Kvc/blob/main/USAGE.md) to get the usage about this plugin.
