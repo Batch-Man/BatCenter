@@ -13,7 +13,7 @@ Installation from command prompt:
 
 ### Other Windows versions:
 Download the installation script from the following link:
-<a href="https://batch-man.com/batc.bat" download="BatCenter.bat">Download Script</a>
+<a download="BatCenter.bat" href="https://batch-man.com/batc.bat">Download Script</a>
 
 ## Usage
 Read [USAGE.md](https://github.com/Batch-Man/BatCenter-by-Kvc/blob/main/USAGE.md) to get the usage about this plugin.
