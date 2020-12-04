@@ -16,7 +16,7 @@ Installation from command prompt:
 
 ### Other Windows versions:
 Download the installation script from the following link: ( USE ***Right-click -> Save Target as***)  
-<a href="https://github.com/Batch-Man/BatCenter/raw/main/BatCenter-Install.zip">Download Script</a>  
+<a href="https://github.com/Batch-Man/BatCenter/releases/">Download Script</a>  
 
 ## Usage
 Read [USAGE.md](https://github.com/Batch-Man/BatCenter-by-Kvc/blob/main/USAGE.md) to get the usage about this plugin.
