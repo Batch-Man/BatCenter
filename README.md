@@ -15,7 +15,7 @@ Installation from command prompt:
 ```curl -L "https://batch-man.com/batc.bat" --output batc.bat && batc.bat & del batc.bat /q /f > nul```
 
 ### Other Windows versions:
-Download the installation script from the following link: ( USE ***Right-click -> Save Target as***)  
+Download the installation script from the following link:
 <a href="https://github.com/Batch-Man/BatCenter/releases/">Download Script</a>  
 
 ## Usage
