@@ -29,7 +29,7 @@ REM For More Visit: www.batch-man.com
 
 
 REM Setting version information...
-Set _ver=1.2
+Set _ver=2.0
 
 
 REM Checking for various parameters of the function...
