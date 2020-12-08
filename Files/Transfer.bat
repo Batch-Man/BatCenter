@@ -1,4 +1,5 @@
 @Echo off
+Setlocal EnableDelayedExpansion
 Set "_Old_Path=%systemDrive%\system\Bat"
 Set "_New_Path=%LocalAppData%\BatCenter"
 If Exist "%_Old_Path%\hosts.txt" (
