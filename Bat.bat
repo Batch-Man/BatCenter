@@ -1,7 +1,7 @@
 @Echo off
 Setlocal EnableDelayedExpansion
 
-Set "_path=%localappdata%\BatCenter"
+Set "_path=%SystemDrive%\System\Bat"
 Set "Original_Path=%path%"
 If Not exist "%_path%" (Md "%_path%"&Echo.First Launch >"%_path%\FirstLaunch.txt")
 
