@@ -31,6 +31,7 @@ If Exist "%_Old_Path%\hosts.txt" (
 	RD /S /Q "!_path!" 2>nul >nul 2>&1
 	Echo.[Done]
 	Set "_path=%_New_Path%"
+	Set "Path=%Path%;%_path%;"
 
 	REM Adding New Path to PATH variable...
 	Echo. Triggering BatCenter to Update Path as per the new Location > "%_New_Path%\FirstLaunch.txt"
