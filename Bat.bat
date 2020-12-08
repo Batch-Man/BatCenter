@@ -109,6 +109,7 @@ REM Saving parameters to variables...
 )
 
 REM Acting as per the Passed parameters...
+
 if /i "%_1%" == "Update" (Call :Update)
 if /i "%_1%" == "list" (Call :List)
 if /i "%_1%" == "search" (Call :Search)
@@ -373,38 +374,39 @@ If !_online_ver! GTR !_ver! (
     Echo For /f "tokens=*" %%%%A in ^('dir /b /a:d'^) do ^(Rd /S /Q "%%%%~A"^)
     Echo Popd
     Echo Echo. Extracted...
-	Echo If EXIST "!SystemDrive!\system\Bat" ^(
-	Echo Robocopy "!SystemDrive!\system\Bat" "!localappdata!\BatCenter" /Mir /E
-	Echo Set "_path=!SystemDrive!\system\Bat"
-	Echo.	
-	Echo REM Removing BatCenter from Path...
-	Echo Call Getlen "!_path!"
-	Echo Set _len=!Errorlevel!
-	Echo Set _NewPath=
-	Echo REM Reading Path of Current User...
-	Echo for /f "skip=2 tokens=1,2,*" %%%%a in ^('reg query HKCU\Environment /v path'^) do ^(Set "_UserPath=%%%%c"^)
-	Echo.
-	Echo REM Checking, if the Path already has path to Bat
-	Echo for /f "tokens=*" %%%%A in ^('StrSplit ^; "!_UserPath!"'^) do ^(
-	Echo 	FOR %%%%a in ^(!_len!^) do ^(
-	Echo 		Set "_Temp=%%%%~A"
-	Echo 		if /i "!_Temp:~0,%%%%~a!" NEQ "!_path!" ^(Set "_NewPath=!_NewPath!!_Temp!;"^)
-	Echo 		^)
-	Echo 	^)
-	Echo Set /p ".=Removing Batcenter From PATH... " ^<nul
-	Echo REM Removing BatCenter path from Environment variable...
-	Echo reg add HKCU\Environment /v Path /d "!_NewPath!" /f 2^>nul ^>nul
-	Echo Cd /
-	Echo RD /S /Q "!_path!"
-	Echo Echo.[Done]
-	Echo Set "_path=!localappdata!\BatCenter"
-	Echo Set "Path=%%Path%%;%%_path%%;"
-	Echo Call Bat Update
-	Echo ^)
-	Echo Type "Files\Change.log" ^| More
-	) >"UpdateBat.bat"
-    Set _UpdateBat=True
-   )
+	Echo Type "!_path!\Files\Change.log" ^| More
+	Echo Pause
+	Set _UpdateBat=True
+	) >"!Temp!\UpdateBat.bat"
+)
+	
+REM Transfer Older version to new Path - !LocalAppData!\BatCenter
+If EXIST "!SystemDrive!\system\Bat" (
+	Robocopy "!SystemDrive!\system\Bat" "!localappdata!\BatCenter" /Mir /E
+	Set "_path=!SystemDrive!\system\Bat"
+
+	REM Removing BatCenter from Path...
+	Call Getlen "!_path!"
+	Set _len=!Errorlevel!
+	Set _NewPath=
+	REM Reading Path of Current User...
+	for /f "skip=2 tokens=1,2,*" %%a in ('reg query HKCU\Environment /v path') do (Set "_UserPath=%%c")
+	REM Checking, if the Path already has path to Bat
+	for /f "tokens=*" %%A in ('StrSplit ^; "!_UserPath!"') do (
+		FOR %%a in (!_len!) do (
+			Set "_Temp=%%~A"
+			if /i "!_Temp:~0,%%~a!" NEQ "!_path!" (Set "_NewPath=!_NewPath!!_Temp!;")
+			)
+		)
+	Set /p ".=Removing Batcenter From PATH... " <nul
+	REM Removing BatCenter path from Environment variable...
+	reg add HKCU\Environment /v Path /d "!_NewPath!" /f 2>nul >nul
+	Cd /
+	RD /S /Q "!_path!"
+	Echo.[Done]
+	Set "_path=!localappdata!\BatCenter"
+	Set "Path=!Path!;!_path!;"
+)
 
 REM Removing Older Index Files...
 Del /f /q "Index\*.*" >nul 2>nul
@@ -453,7 +455,7 @@ If not exist "Files\_APIAccessTime.txt" (
 	IF !_TempCount! GEQ 180 (Echo.This file limits API calls...>"Files\BlockUpdate.txt")
 	)
 REM Updating BatCenter in case, if there is an update...
-If Defined _UpdateBat (Start "" /SHARED "UpdateBat.bat")
+If Defined _UpdateBat (Start "" /SHARED "!Temp!\UpdateBat.bat")
 Exit /b 0
 
 REM ============================================================================

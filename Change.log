@@ -1,5 +1,8 @@
-----------------------2020 Dec, 8----------------------
+----------------------2020 Nov, 30----------------------
 _________________________v.1.1__________________________
 1. Now you can use '-switch' as any parameter of the command. ("bat -y install batbox"  is same as  "bat install batbox -y")
 2. Self-Updating of Bat-Center optimised and corrected (Bug Fixed)
+
+----------------------2020 Dec, 8----------------------
+_________________________v.1.2__________________________
 3. Changed the default path of Bat-Center, from "%systemdrive%\System\Bat" to "%localappdata%\BatCenter" - Thanks @anic17 for suggestion
