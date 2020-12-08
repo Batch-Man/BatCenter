@@ -29,7 +29,7 @@ REM For More Visit: www.batch-man.com
 
 
 REM Setting version information...
-Set _ver=1.1
+Set _ver=1.2
 
 
 REM Checking for various parameters of the function...
@@ -360,7 +360,7 @@ If !_online_ver! GTR !_ver! (
     Echo. A NEW VERSION OF BATCENTER IS AVAILABLE... [Current: !_ver!, New: !_online_ver!]
 	Echo.
     Wget "https://github.com/Batch-Man/BatCenter/archive/main.zip" -O "Zips\BatCenter.zip" -q --tries=5 --show-progress --timeout=5
-    	REM Creating a separate batch-file, as script overwriting  itself can lead to malfunctioning...
+    REM Creating a separate batch-file, as script overwriting  itself can lead to malfunctioning...
    	(
 	Echo @Echo off
 	Echo SetLocal EnableDelayedExpansion
@@ -379,7 +379,7 @@ If !_online_ver! GTR !_ver! (
 	Set _UpdateBat=True
 	) >"!Temp!\UpdateBat.bat"
 )
-	
+
 REM Transfer Older version to new Path - !LocalAppData!\BatCenter
 If EXIST "!SystemDrive!\system\Bat" (
 	Robocopy "!SystemDrive!\system\Bat" "!localappdata!\BatCenter" /Mir /E
