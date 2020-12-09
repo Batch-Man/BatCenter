@@ -374,8 +374,11 @@ If !_online_ver! GTR !_ver! (
     Echo For /f "tokens=*" %%%%A in ^('dir /b /a:d'^) do ^(Rd /S /Q "%%%%~A"^)
     Echo Popd
     Echo Echo. Extracted...
-	Set _UpdateBat=True
+	Echo REM Adjusting and transferring all files to new path...
+	Echo If Exist "%SystemDrive%\system\Bat\hosts.txt" ^(Start "" /SHARED /WAIT /B Transfer.bat^)
+	Echo Pause	
 	) >"!Temp!\UpdateBat.bat"
+	Set _UpdateBat=True
 )
 
 REM Removing Older Index Files...
