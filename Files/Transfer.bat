@@ -41,3 +41,4 @@ If Exist "%_Old_Path%\hosts.txt" (
 	Echo. Please LOG-OFF/LOG-IN to make new Changes effective.
 	Echo.
 	)
+exit /b
