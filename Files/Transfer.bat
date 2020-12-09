@@ -35,7 +35,7 @@ If Exist "%_Old_Path%\hosts.txt" (
 
 	REM Adding New Path to PATH variable...
 	Echo. Triggering BatCenter to Update Path as per the new Location > "%_New_Path%\FirstLaunch.txt"
-	Call Bat update
+	reg add HKCU\Environment /v Path /d "!Path!;!_path!;!_path!\Files;!_path!\plugins" /f
 	Echo.
 	Echo. RECOMMENDED:
 	Echo. Please LOG-OFF/LOG-IN to make new Changes effective.
