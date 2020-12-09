@@ -61,9 +61,6 @@ For %%A in ("Json" "plugins" "Files" "Index" "Zips") do (If Not Exist "!_path!\%
 Set "path=%path%;%_path%;%_path%\Files;%_path%\plugins;%cd%;%cd%\files"
 CD /d "%_path%"
 
-REM Adjusting and transferring all files to new path...
-If Exist "%SystemDrive%\system\Bat\hosts.txt" (Start "" /SHARED /WAIT /B Transfer.bat && Echo. >"FirstLaunch.txt")
-
 If exist "FirstLaunch.txt" (
 	Echo Setting up Bat-Center by Kvc...
 	Del /F /q "FirstLaunch.txt" >nul 2>nul
@@ -428,7 +425,10 @@ If not exist "Files\_APIAccessTime.txt" (
 	IF !_TempCount! GEQ 180 (Echo.This file limits API calls...>"Files\BlockUpdate.txt")
 	)
 REM Updating BatCenter in case, if there is an update...
-If Defined _UpdateBat (Start "" /SHARED /B "!Temp!\UpdateBat.bat")
+If Defined _UpdateBat (Start "" /SHARED /WAIT /B "!Temp!\UpdateBat.bat")
+
+REM Adjusting and transferring all files to new path...
+If Exist "%SystemDrive%\system\Bat\hosts.txt" (Start "" /SHARED /WAIT /B Transfer.bat && Echo. >"FirstLaunch.txt")
 Exit /b 0
 
 REM ============================================================================
