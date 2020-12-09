@@ -61,9 +61,6 @@ For %%A in ("Json" "plugins" "Files" "Index" "Zips") do (If Not Exist "!_path!\%
 Set "path=%path%;%_path%;%_path%\Files;%_path%\plugins;%cd%;%cd%\files"
 CD /d "%_path%"
 
-REM Adjusting and transferring all files to new path...
-If Exist "%SystemDrive%\system\Bat\hosts.txt" (Call Transfer.bat)
-
 If exist "FirstLaunch.txt" (
 	Echo Setting up Bat-Center by Kvc...
 	Del /F /q "FirstLaunch.txt" >nul 2>nul
@@ -93,11 +90,26 @@ REM Cmdbkg
 REM Checking if the '-y' is provided in parameters...
 Set _y=
 For /l %%A in (1,1,9) do (
-	If /i "!_%%~A!" == "-y" (Set _y=True&&Set _%%~A=)
-	If /i "!_%%~A!" == "/y" (Set _y=True&&Set _%%~A=)
+	If /i "!_%%~A!" == "-y" (Set _y=True&&Shift /%%~A)
+	If /i "!_%%~A!" == "/y" (Set _y=True&&Shift /%%~A)
 	)
 
+REM Resetting Vairables as per parameters...
+If /i "!_y!" == "True" (
+REM Saving parameters to variables...
+	Set _1=%~1
+	Set _2=%~2
+	Set _3=%~3
+	Set _4=%~4
+	Set _5=%~5
+	Set _6=%~6
+	Set _7=%~7
+	Set _8=%~8
+	Set _9=%~9
+)
+
 REM Acting as per the Passed parameters...
+
 if /i "%_1%" == "Update" (Call :Update)
 if /i "%_1%" == "list" (Call :List)
 if /i "%_1%" == "search" (Call :Search)
@@ -342,24 +354,32 @@ wget -qO- "https://raw.githubusercontent.com/Batch-Man/BatCenter/main/Bat.bat" |
 for /f "eol=w usebackq tokens=1,2* delims==" %%a in ("!Temp!\_Ver.txt") do (If Not Defined _online_ver (Set "_online_ver=%%~b"))
 
 REM Comparing the versions...
-If /i "!_ver!" NEQ "!_online_ver!" (
-    Echo. A NEW VERSION OF BATCENTER IS AVAILABLE...
+Set _ver=!_ver:.=!
+Set _online_ver=!_online_ver:.=!
+If !_online_ver! GTR !_ver! (
+    Echo. A NEW VERSION OF BATCENTER IS AVAILABLE... [Current: !_ver!, New: !_online_ver!]
+	Echo.
     Wget "https://github.com/Batch-Man/BatCenter/archive/main.zip" -O "Zips\BatCenter.zip" -q --tries=5 --show-progress --timeout=5
-    REM Creating a separate batch-file, as script overwriting  itself can lead to malfunctioning...
-   	Echo @Echo off >"UpdateBat.bat"
-    Echo Title Updating BatCenter... >>"UpdateBat.bat"
-    Echo cls >>"UpdateBat.bat"
-    Echo Echo. Extracting... to 'PATH' >>"UpdateBat.bat"
-    Echo Pushd files >>"UpdateBat.bat"
-    Echo 7za l "!_path!\Zips\BatCenter.zip" >>"UpdateBat.bat"
-    Echo 7za e -y "!_path!\Zips\BatCenter.zip" >>"UpdateBat.bat"
-    Echo REM Removing Empty Folders... >>"UpdateBat.bat"
-    Echo For /f "tokens=*" %%%%A in ^('dir /b /a:d'^) do ^(Rd /S /Q "%%%%~A"^) >>"UpdateBat.bat"
-    Echo Popd >>"UpdateBat.bat"
-    Echo Echo. Extracted... >>"UpdateBat.bat"
-    Echo exit >>"UpdateBat.bat"
-    Set _UpdateBat=True
-   )
+    	REM Creating a separate batch-file, as script overwriting  itself can lead to malfunctioning...
+   	(
+	Echo @Echo off
+	Echo SetLocal EnableDelayedExpansion
+    Echo Title Updating BatCenter...
+    Echo cls
+    Echo Echo. Extracting... to 'PATH'
+    Echo Pushd files
+    Echo 7za l "!_path!\Zips\BatCenter.zip"
+    Echo 7za e -y "!_path!\Zips\BatCenter.zip"
+    Echo REM Removing Empty Folders...
+    Echo For /f "tokens=*" %%%%A in ^('dir /b /a:d'^) do ^(Rd /S /Q "%%%%~A"^)
+    Echo Popd
+    Echo Echo. Extracted...
+	Set _UpdateBat=True
+	) >"!Temp!\UpdateBat.bat"
+)
+
+REM Adjusting and transferring all files to new path...
+If Exist "%SystemDrive%\system\Bat\hosts.txt" (Call Transfer.bat)
 
 REM Removing Older Index Files...
 Del /f /q "Index\*.*" >nul 2>nul
@@ -408,7 +428,7 @@ If not exist "Files\_APIAccessTime.txt" (
 	IF !_TempCount! GEQ 180 (Echo.This file limits API calls...>"Files\BlockUpdate.txt")
 	)
 REM Updating BatCenter in case, if there is an update...
-If Defined _UpdateBat (Start "" /SHARED "UpdateBat.bat")
+If Defined _UpdateBat (Start "" /SHARED "!Temp!\UpdateBat.bat")
 Exit /b 0
 
 REM ============================================================================
@@ -491,7 +511,6 @@ echo. Reset [all]		: Removes installed plugins ^| with [all] it removes BAT
 Echo.
 Echo. Switch:-
 Echo. -y ^| /Y		: Suppresses prompting to confirm your action
-Echo. 			  ALWAYS USE -Y or /Y at the end of your command.
 Echo.
 Echo. Example: Call Bat Update
 Echo. Example: Call Bat Update Microsoft
