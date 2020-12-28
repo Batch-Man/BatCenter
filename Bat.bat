@@ -29,7 +29,7 @@ REM For More Visit: www.batch-man.com
 
 
 REM Setting version information...
-Set _ver=2.0
+Set _ver=2.1
 
 
 REM Checking for various parameters of the function...
@@ -111,6 +111,7 @@ REM Saving parameters to variables...
 REM Acting as per the Passed parameters...
 
 if /i "%_1%" == "Update" (Call :Update)
+if /i "%_1%" == "ilist" (Call :Installed_List)
 if /i "%_1%" == "list" (Call :List)
 if /i "%_1%" == "search" (Call :Search)
 if /i "%_1%" == "install" (Call :Install)
@@ -153,6 +154,16 @@ REM BUFFER FOR FUTURE UPDATES...
 Goto :End
 
 REM ============================================================================
+
+:Installed_List
+Dir /b "Zips\*.zip" > "%Temp%\List.txt" 2>nul
+If /i %Errorlevel% NEQ 0 (Echo. NOTHING is INSTALLED YET^^! && Goto :EOF)
+For /f "usebackQ tokens=* delims=." %%A in ("%Temp%\List.txt") do (
+	ReadLine "Index\name.index" %%~A
+	)
+Goto :EOF
+
+
 :Details
 If /i "%_2%" == "" (Echo. Search Term Missing... && Goto :End)
 Set _Index_Number=!_2!

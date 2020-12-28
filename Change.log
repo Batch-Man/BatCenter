@@ -6,3 +6,8 @@ _________________________v.1.1__________________________
 ----------------------2020 Dec, 8 ----------------------
 _________________________v.2.0__________________________
 3. Changed the default BatCenter Directory from "%SystemDrive%\System\Bat" to "%LocalAppData%\BatCenter" - Thanks Anic17
+
+----------------------2020 Dec, 29 ----------------------
+_________________________v.2.1__________________________
+
+4. Added a New Parameter 'iList' for Listing all the installed Plugins in the current system
