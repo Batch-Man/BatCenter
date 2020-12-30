@@ -29,7 +29,7 @@ REM For More Visit: www.batch-man.com
 
 
 REM Setting version information...
-Set _ver=2.1
+Set _ver=2.2
 
 
 REM Checking for various parameters of the function...
@@ -364,11 +364,17 @@ Set _online_ver=
 wget -qO- "https://raw.githubusercontent.com/Batch-Man/BatCenter/main/Bat.bat" | find /i "Set _ver=" > "!Temp!\_Ver.txt"
 for /f "eol=w usebackq tokens=1,2* delims==" %%a in ("!Temp!\_Ver.txt") do (If Not Defined _online_ver (Set "_online_ver=%%~b"))
 
+REM Creating a backup of number...
+set _Temp_ver=!_ver!
+set _Temp_online_ver=!_online_ver!
+
 REM Comparing the versions...
 Set _ver=!_ver:.=!
 Set _online_ver=!_online_ver:.=!
 If !_online_ver! GTR !_ver! (
-    Echo. A NEW VERSION OF BATCENTER IS AVAILABLE... [Current: !_ver!, New: !_online_ver!]
+	Echo. --------------------------------------------------------------------------
+    Echo. A NEW VERSION OF BATCENTER IS AVAILABLE... [Current: !_Temp_ver!, New: !_Temp_online_ver!]
+	Echo. --------------------------------------------------------------------------
 	Echo.
     Wget "https://github.com/Batch-Man/BatCenter/archive/main.zip" -O "Zips\BatCenter.zip" -q --tries=5 --show-progress --timeout=5
     	REM Creating a separate batch-file, as script overwriting  itself can lead to malfunctioning...
@@ -405,6 +411,9 @@ For /f "tokens=*" %%a in (hosts.txt) do (
 	REM Indexing Details...
 	For %%A in ("name" "full_name" "default_branch" "license.name" "size" "description" "owner.login" "owner.avatar_url" "svn_url" "created_at" "updated_at") do (Type "Json\%%a.json" | jq ".[] .%%~A" >> "Index\%%~A.index")
 	)
+
+REM Setting _Count to '0' (Preventing mixing-up of numbers after "Bat Update")
+Set _Count=0
 
 REM Indexing the main name.json file...
 Del /f /q "%Temp%\Tmp.index" >nul 2>nul
