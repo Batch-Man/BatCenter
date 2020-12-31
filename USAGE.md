@@ -14,6 +14,7 @@
  6. Reset
  7. Help
  8. Ver
+ 9. iList
 ```
 ___
 
@@ -72,6 +73,13 @@ ___
 Prints the current version of installed BatCenter.  
 **Syntax:** ``call Bat ver``  
 **Example:** ``Call Bat ver``  
+
+___
+
+## 9. iList
+List Out all the Currently Installed Plugins in the system.  
+**Syntax:** ``call Bat iList``  
+**Example:** ``Call Bat iList``  
 
 ___
 ___
