@@ -161,7 +161,19 @@ Echo. This Feature will be added in next version. KEEP CODING...
 Goto :EOF
 
 :Installed_List
-If NOT Exist "Files\Installed.txt" (Echo. NOTHING is INSTALLED YET^^! && Goto :EOF)
+If NOT Exist "Files\Installed.txt" (
+	Dir /b "Zips\*.zip" > "!Temp!\List.txt" 2>nul
+	If /i !Errorlevel! NEQ 0 (Echo. NOTHING is INSTALLED YET^^! && Goto :EOF)
+	
+	For /f "usebackQ tokens=* delims=." %%A in ("%Temp%\List.txt") do (
+		Set "_Temp=%%~A"
+		
+		REM Checking if the name of the file is - index number or NOT
+		For /L %%X in (0,1,9) do (Set "_Temp=!_Temp:%%~X=!")
+		
+		IF Not Defined _Temp (Echo.%%~A>>"Files\Installed.txt")
+		)
+	)
 
 REM Tracking Number of installed Plugins in system...
 Set _Count=0
