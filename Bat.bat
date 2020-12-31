@@ -29,7 +29,7 @@ REM For More Visit: www.batch-man.com
 
 
 REM Setting version information...
-Set _ver=2.2
+Set _ver=2.3
 
 
 REM Checking for various parameters of the function...
@@ -115,6 +115,7 @@ if /i "%_1%" == "ilist" (Call :Installed_List)
 if /i "%_1%" == "list" (Call :List)
 if /i "%_1%" == "search" (Call :Search)
 if /i "%_1%" == "install" (Call :Install)
+if /i "%_1%" == "uninstall" (Call :Uninstall)
 if /i "%_1%" == "detail" (Call :Details)
 if /i "%_1%" == "reset" (
 	if /i "%_2%" NEQ "all" (Del /f /q "hosts.txt" & Del /f /q "Plugins\*.*" & Del /f /q "Zips\*.*" && Call :update && Goto :EOF) ELSE (
@@ -155,12 +156,20 @@ Goto :End
 
 REM ============================================================================
 
+:Uninstall
+Echo. This Feature will be added in next version. KEEP CODING...
+Goto :EOF
+
 :Installed_List
-Dir /b "Zips\*.zip" > "%Temp%\List.txt" 2>nul
-If /i %Errorlevel% NEQ 0 (Echo. NOTHING is INSTALLED YET^^! && Goto :EOF)
-For /f "usebackQ tokens=* delims=." %%A in ("%Temp%\List.txt") do (
-	ReadLine "Index\name.index" %%~A
+If NOT Exist "Files\Installed.txt" (Echo. NOTHING is INSTALLED YET^^! && Goto :EOF)
+
+REM Tracking Number of installed Plugins in system...
+Set _Count=0
+
+For /f "usebackQ tokens=* delims=." %%A in ("Files\Installed.txt") do (
+	If Not Defined _Temp (ReadLine "Index\name.index" %%~A && Set /A _Count+=1)
 	)
+If !_Count! == 0 (Echo. NOTHING is INSTALLED YET^^!)
 Goto :EOF
 
 
@@ -237,6 +246,10 @@ IF /i "!_Error!" NEQ "T" (
 	Call :GetIndexNumber "!_Result[0]!" _Index_Number
 )
 
+REM Checking the max number of the plugins available
+For /f %%a in ('findstr /R /N "^^" "Index\name.index" ^| find /C ":"') do (Set _Max_Index=%%a)
+If !_Index_Number! GTR !_Max_Index! (Echo. Index is more than available List.&&Goto:End)
+
 REM Echo !_Index_Number!
 Call :FetchDetails !_Index_Number!
 Echo. Initiating Download...
@@ -245,12 +258,42 @@ Echo. Repository DOWNLOADED!
 Echo. Extracting... to '%_path%\Plugins'
 Pushd Plugins
 Echo.
-7za l "..\Zips\!_Index_Number!.zip"
+for /f "skip=13 tokens=*" %%a in ('7za l "..\Zips\!_Index_Number!.zip"') do (echo %%a)
 7za e -y "..\Zips\!_Index_Number!.zip" >nul
 REM Removing Empty Folders...
 For /f "tokens=*" %%A in ('dir /b /a:d') do (Rd /S /Q "%%~A")
 Popd
 Echo. Extracted...!
+Echo. UPDATING DATABASE...
+
+REM Adding the Index of the Installed Plugin in INSTALLED PLUGINs list
+Echo.!_Index_Number!>> "Files\_Plugins.installed"
+
+REM Keeping names of all files those are Installed...
+
+REM As All plugins are being extracted in one path, so multiple files/dependency files can be overwritten
+REM while installing a plugin. Which is not a problem - but, while UNINSTALLING the plugin it can cause 
+REM problems.
+
+REM Here - I am Checking to see.. if any file is IMMUNE to 'install & uninstall' process of plugins
+REM In other words, If a single file is being used by multiple Plugins, then it must be marked as IMMUNE
+REM So, when user uninstalls a plugin from system - He/she would not want to accidently make other plugins
+REM DEAD/Unfunctional because of the one dependency. (e.g: batbox.exe is used by many batch plugins)
+
+If Exist "Files\_!_Index_Number!.content" (Del /f /q "Files\_!_Index_Number!.content" >nul 2>nul)
+for /f "skip=16 tokens=1,2,3,4,5,6*" %%a in ('7za l "Zips\!_Index_Number!.zip"') do (
+	if /i "%%~xf" NEQ "" (
+		Echo %%~nxf>>"Files\_!_Index_Number!.content"
+		REM Checking if the file is IMMUNE or NOT
+		If Exist "plugins\%%~nxf" (
+			REM Checking if the IMMUNE file is already in the DB List or NOT
+			Set _Count=0
+			For /f "tokens=*" %%A in ('type "Files\_Immune.installed"') do (If /I "%%~A" == "%%~nxf" (Set /A _Count+=1))
+			If !_Count! == 0 (Echo.%%~nxf>>"Files\_Immune.installed")
+			)
+		)
+	)
+Echo. UPDATED^^!
 goto :End
 
 REM ============================================================================
@@ -281,6 +324,10 @@ REM ============================================================================
 :FetchDetails
 Set _Index_Number=%~1
 IF Not Defined _Index_Number (Goto :EOF)
+
+REM Checking the max number of the plugins available
+For /f %%a in ('findstr /R /N "^^" "Index\name.index" ^| find /C ":"') do (Set _Max_Index=%%a)
+If !_Index_Number! GTR !_Max_Index! (Echo. Index is more than available List.&&Goto:EOF)
 
 REM Fetching Details of Selected Repo...
 For %%A in ("name" "full_name" "default_branch" "license.name" "size" "description" "owner.login" "owner.avatar_url" "svn_url" "created_at" "updated_at") do (
@@ -393,7 +440,9 @@ If !_online_ver! GTR !_ver! (
     Echo Echo. Extracted...
 	Echo REM Adjusting and transferring all files to new path...
 	Echo If Exist "%SystemDrive%\system\Bat\hosts.txt" ^(Start "" /SHARED /WAIT /B Transfer.bat^)
-	Echo Pause	
+	Echo Echo. REMOVING JUNK!
+	Echo Del /f /q "Zips\BatCenter.zip" 
+	Echo Pause
 	) >"!Temp!\UpdateBat.bat"
 	Set _UpdateBat=True
 )
@@ -510,10 +559,11 @@ REM ============================================================================
 Echo.
 Echo. This program will help you download the batch plugins from selected
 Echo. sources, you can search and see details about them before downloading
-Echo. CREDITS: Bat%_ver% by Kvc
+Echo. CREDITS: Bat %_ver% by Kvc
 echo.
 echo. Syntax: Call Bat Update [Github_User]
 echo. Syntax: Call Bat List
+echo. Syntax: Call Bat iList
 echo. Syntax: Call Bat Search [Term1] [Term2] [Term3] ...
 echo. Syntax: Call Bat Install [Local-ID ^| [Term1] [Term2] [Term3] ...]
 echo. Syntax: Call Bat Detail [Local-ID ^| [Term1] [Term2] [Term3] ...]
@@ -527,6 +577,7 @@ echo. ver			: Displays version of program
 echo. help			: Displays help for the program
 Echo. Update [User]		: Updates DATABASE with given user's plugins
 Echo. List			: Lists out list of all Plugins in DATABASE
+Echo. iList			: Lists out list of installed Plugins in System
 Echo. Search			: Filters out plugins as per the given keywords
 echo. Install		: Downloads and installs batch plugin in the PATH
 Echo. Detail			: Provides detail about the filtered Project

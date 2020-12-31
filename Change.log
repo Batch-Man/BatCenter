@@ -16,3 +16,15 @@ _________________________v.2.1__________________________
 _________________________v.2.2__________________________
 5. BUG FIXED: The update version numbers, in proper decimals on the screen (while Updating Batcenter to New version)
 6. BUG FIXED: Starting of the numbers from non-zero numbers after "Bat UPDATE"
+
+----------------------2020 Dec, 31 ----------------------
+_________________________v.2.3__________________________
+7. Removing the 'Older Junk Files' after Updating BatCenter to New version.
+8. BUG FIXED: Fixed problems, when user provides index number out of the range of available list.
+9. More Clean OUTPUT on screen, after installing an external plugin.
+10. BUG FIXED: Improved the Code for 'iList' Parameter.
+11. Better Tracking of all installed PLUGINS, each time a plugin is installed in system. (Individual Plugin Tracking)
+12. BUG Fixed for same dependecies used by multiple plugins (so, uninstalling a plugin will not make others to stop working as common dependencies will not be deleted)
+
+___Coming SOON...
+13. Added a new Parameter 'Uninstall' - to uninstall individual plugins from system.
