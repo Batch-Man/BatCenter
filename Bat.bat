@@ -310,7 +310,7 @@ for /f "skip=16 tokens=1,2,3,4,5,*" %%a in ('7za l "Zips\!_Index_Number!.zip"') 
 			If Exist "plugins\%%~nxf" (
 				REM Checking if the IMMUNE file is already in the DB List or NOT
 				Set _Count=0
-				For /f "tokens=*" %%A in ('type "Files\_Immune.installed"') do (If /I "%%~A" == "%%~nxf" (Set /A _Count+=1))
+				If Exist "Files\_Immune.installed" (For /f "tokens=*" %%A in ('type "Files\_Immune.installed"') do (If /I "%%~A" == "%%~nxf" (Set /A _Count+=1)))
 				If !_Count! == 0 (Echo.%%~nxf>>"Files\_Immune.installed")
 				)
 			)
