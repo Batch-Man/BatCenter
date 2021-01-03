@@ -302,7 +302,7 @@ for /f "skip=16 tokens=1,2,3,4,5,*" %%a in ('7za l "Zips\!_Index_Number!.zip"') 
 	
 	if /i "!_Dot!" == "T" (
 		REM Checking for the character 'D' to be present in the ATTRIBUTES...
-		Echo _Folder=T
+		Set _Folder=T
 		(echo !_Temp! | findstr /ic:"D" >nul 2>nul) && (Set _Folder=T) || (Set _Folder=F)
 		if /i "!_Folder!" == "F" (
 			Echo %%~nxf>>"Files\_!_Index_Number!.content"
