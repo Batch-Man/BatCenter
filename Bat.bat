@@ -29,7 +29,7 @@ REM For More Visit: www.batch-man.com
 
 
 REM Setting version information...
-Set _ver=2.3
+Set _ver=2.4
 
 
 REM Checking for various parameters of the function...
@@ -258,8 +258,7 @@ IF /i "!_Error!" NEQ "T" (
 	Call :GetIndexNumber "!_Result[0]!" _Index_Number
 )
 
-REM Checking the max number of the plugins available
-For /f %%a in ('findstr /R /N "^^" "Index\name.index" ^| find /C ":"') do (Set _Max_Index=%%a)
+Call :Get_Max_Index _Max_Index
 If !_Index_Number! GTR !_Max_Index! (Echo. Index is more than available List.&&Goto:End)
 
 REM Echo !_Index_Number!
@@ -293,15 +292,27 @@ REM So, when user uninstalls a plugin from system - He/she would not want to acc
 REM DEAD/Unfunctional because of the one dependency. (e.g: batbox.exe is used by many batch plugins)
 
 If Exist "Files\_!_Index_Number!.content" (Del /f /q "Files\_!_Index_Number!.content" >nul 2>nul)
-for /f "skip=16 tokens=1,2,3,4,5,6*" %%a in ('7za l "Zips\!_Index_Number!.zip"') do (
-	if /i "%%~xf" NEQ "" (
-		Echo %%~nxf>>"Files\_!_Index_Number!.content"
-		REM Checking if the file is IMMUNE or NOT
-		If Exist "plugins\%%~nxf" (
-			REM Checking if the IMMUNE file is already in the DB List or NOT
-			Set _Count=0
-			For /f "tokens=*" %%A in ('type "Files\_Immune.installed"') do (If /I "%%~A" == "%%~nxf" (Set /A _Count+=1))
-			If !_Count! == 0 (Echo.%%~nxf>>"Files\_Immune.installed")
+for /f "skip=16 tokens=1,2,3,4,5,*" %%a in ('7za l "Zips\!_Index_Number!.zip"') do (
+	REM Checking, if the current thing is file or a folder...
+	Set "_Temp=%%~c"
+	
+	Set _Dot=F
+	REM Check, if there is any '.' in the _Temp... (So, that we can consider the line to be processed)
+	(echo !_Temp! | findstr /ic:"." >nul 2>nul) && (Set _Dot=T) || (Set _Dot=F)
+	
+	if /i "!_Dot!" == "T" (
+		REM Checking for the character 'D' to be present in the ATTRIBUTES...
+		Echo _Folder=T
+		(echo !_Temp! | findstr /ic:"D" >nul 2>nul) && (Set _Folder=T) || (Set _Folder=F)
+		if /i "!_Folder!" == "F" (
+			Echo %%~nxf>>"Files\_!_Index_Number!.content"
+			REM Checking if the file is IMMUNE or NOT
+			If Exist "plugins\%%~nxf" (
+				REM Checking if the IMMUNE file is already in the DB List or NOT
+				Set _Count=0
+				For /f "tokens=*" %%A in ('type "Files\_Immune.installed"') do (If /I "%%~A" == "%%~nxf" (Set /A _Count+=1))
+				If !_Count! == 0 (Echo.%%~nxf>>"Files\_Immune.installed")
+				)
 			)
 		)
 	)
@@ -338,7 +349,7 @@ Set _Index_Number=%~1
 IF Not Defined _Index_Number (Goto :EOF)
 
 REM Checking the max number of the plugins available
-For /f %%a in ('findstr /R /N "^^" "Index\name.index" ^| find /C ":"') do (Set _Max_Index=%%a)
+Call :Get_Max_Index _Max_Index
 If !_Index_Number! GTR !_Max_Index! (Echo. Index is more than available List.&&Goto:EOF)
 
 REM Fetching Details of Selected Repo...
@@ -444,7 +455,6 @@ If !_online_ver! GTR !_ver! (
     Echo cls
     Echo Echo. Extracting... to 'PATH'
     Echo Pushd files
-    Echo 7za l "!_path!\Zips\BatCenter.zip"
     Echo 7za e -y "!_path!\Zips\BatCenter.zip"
     Echo REM Removing Empty Folders...
     Echo For /f "tokens=*" %%%%A in ^('dir /b /a:d'^) do ^(Rd /S /Q "%%%%~A"^)
@@ -485,6 +495,9 @@ For /f "usebackQ tokens=*" %%A in ("Index\name.index") do (
 	)
 
 Copy /y "%Temp%\Tmp.index" "Index\name.index" >nul 2>nul
+REM Keeping an eye on the Max Number of Plugins available...
+Set _Max_Index=!_Count!
+Echo.!_Max_Index!>"files\_Max_Index.Count"
 
 Echo. UPDATED DATABASE...!
 REM LIMITING ACCESS TO API ONLY 180 TIMES/H (Thanks to @anic17 for Idea to improve)
@@ -559,6 +572,17 @@ For /f "eol=- skip=2 tokens=*" %%A in ('Type "!Temp!\tmp.index"') do (
 	)
 If Defined _RCount (Set !_RCount!=!_TempCount!)
 Goto :End
+
+:Get_Max_Index [%~1 = Variable to return the value of max-index of the list of plugins...]
+SetLocal
+REM Checking the max number of the plugins available
+If Exist "Files\_Max_Index.count" (Set /p _Max_Index=<"Files\_Max_Index.count") ELSE (
+	Set _Max_Index=0
+	For /F "usebackq tokens=*" %%A in ("Index\name.index") do (Set /A _Max_Index+=1)
+	Echo.!_Max_Index!>"Files\_Max_Index.count"
+	)
+Endlocal && Set "%~1=%_Max_Index%"
+Goto :EOF
 
 
 REM ============================================================================

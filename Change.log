@@ -26,5 +26,11 @@ _________________________v.2.3__________________________
 11. Better Tracking of all installed PLUGINS, each time a plugin is installed in system. (Individual Plugin Tracking)
 12. BUG Fixed for same dependecies used by multiple plugins (so, uninstalling a plugin will not make others to stop working as common dependencies will not be deleted)
 
+----------------------2021 Jan, 3 ----------------------
+_________________________v.2.4__________________________
+13. BUG FIXED: 'Install Parameter' was broken - Fixed it.
+14. Removed Displaying Extra Details after UPDATING BATCENTER to the LATEST version. (Thank Anic17)
+15. Improved the Detection of the installed files, with improved code (Thank Anic17)
+
 ___Coming SOON...
-13. Added a new Parameter 'Uninstall' - to uninstall individual plugins from system.
+Added a new Parameter 'Uninstall' - to uninstall individual plugins from system.
