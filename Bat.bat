@@ -29,7 +29,7 @@ REM For More Visit: www.batch-man.com
 
 
 REM Setting version information...
-Set _ver=2.4
+Set _ver=2.5
 
 
 REM Checking for various parameters of the function...
@@ -56,7 +56,9 @@ REM ============================================================================
 :Main
 
 REM Verifying the Required folder tree for files...
-For %%A in ("Json" "plugins" "Files" "Index" "Zips") do (If Not Exist "!_path!\%%~A" (MD "!_path!\%%~A"))
+For %%A in ("Json" "plugins" "Files" "Index" "Zips" "Temp") do (If Not Exist "!_path!\%%~A" (MD "!_path!\%%~A"))
+if /i "%_1%" NEQ "Update" (For %%A in ("name" "full_name" "default_branch" "license.name" "size" "description" "owner.login" "owner.avatar_url" "svn_url" "created_at" "updated_at" "id") do (If not Exist "!_path!\Index\%%~A.index" (Echo.^>^>Please Run 'Bat Update' before you do anything^^!^<^<&&Goto :End)))
+
 
 Set "path=%path%;%_path%;%_path%\Files;%_path%\plugins;%cd%;%cd%\files"
 CD /d "%_path%"
@@ -77,10 +79,10 @@ If exist "FirstLaunch.txt" (
 	If Not Defined _Found (	
 		REM Adding BatCenter path to Environment variable...
 		reg add HKCU\Environment /v Path /d "!_UserPath!;!_path!;!_path!\Files;!_path!\plugins" /f
-		Echo BATCENTER IS ADDED TO YOUR PATH...
 		)
 	Echo Setup Completed Successfully!
-	Echo.
+	REM Updating the environment path, without restarting.... (Thanks anic17)
+	Call EnvUpdate.bat
 	if /i "%_1%" == "Update" (Goto :End)
 	)
 
@@ -117,32 +119,7 @@ if /i "%_1%" == "search" (Call :Search)
 if /i "%_1%" == "install" (Call :Install)
 if /i "%_1%" == "uninstall" (Call :Uninstall)
 if /i "%_1%" == "detail" (Call :Details)
-if /i "%_1%" == "reset" (
-	if /i "%_2%" NEQ "all" (Del /f /q "hosts.txt" & Del /f /q "Plugins\*.*" & Del /f /q "Zips\*.*" && Call :update && Goto :EOF) ELSE (
-	REM Removing BatCenter from Path...
-	Call Getlen "!_path!"
-	Set _len=!Errorlevel!
-	Set _NewPath=
-	REM Reading Path of Current User...
-	for /f "skip=2 tokens=1,2,*" %%a in ('reg query HKCU\Environment /v path') do (Set "_UserPath=%%c")
-
-	REM Checking, if the Path already has path to Bat
-	for /f "tokens=*" %%A in ('StrSplit ^; "!_UserPath!"') do (
-		REM Echo.%%A
-		FOR %%a in (!_len!) do (
-			Set "_Temp=%%~A"
-			if /i "!_Temp:~0,%%~a!" NEQ "!_path!" (Set "_NewPath=!_NewPath!!_Temp!;")
-			)
-		)
-	Set /p ".=Removing Batcenter From PATH... " <nul
-	REM Removing BatCenter path from Environment variable...
-	reg add HKCU\Environment /v Path /d "!_NewPath!" /f 2>nul >nul
-	Cd/ 2>nul >nul 2>&1
-	RD /S /Q "!_path!" 2>nul >nul 2>&1
-	Echo.[Done]
-	Exit /b
-	)
-)
+if /i "%_1%" == "reset" (If /I "%_2%" == "all" (Call :ResetAll) ELSE (Call :Reset))
 
 REM Echo. Invalid Parameter...
 REM ECHO. TRY using 'Bat /?' for help!
@@ -157,31 +134,101 @@ Goto :End
 REM ============================================================================
 
 :Uninstall
-Echo. This Feature will be added in next version. KEEP CODING...
+REM Set _Index_Number=%_1%
+REM Generating a Temp File, for the list of installed plugins
+REM IF NOT Exist "Temp\_Plugins.installed" (Echo. NOTHING Is Installed Yet^^!&&Goto :End)
+
+REM Set _Temp=0
+REM For /f "usebackQ tokens=*" %%A in ("Temp\_Plugins.installed") do (If /I "%%~A" == "!_Index_Number!" (Set /A _Temp+=1))
+Echo. This feature will come soon...
+Goto :EOF
+
+:Reset
+Del /f /q "hosts.txt" 
+Del /f /q "Plugins\*.*"
+Del /f /q "Index\*.*"
+Del /f /q "Json\*.*"
+Del /f /q "Zips\*.*"
+Del /f /q "Temp\*.*"
+Call :update
+Goto :EOF
+
+:ResetAll
+REM Removing BatCenter from Path...
+Call Getlen "!_path!"
+Set _len=!Errorlevel!
+Set _NewPath=
+REM Reading Path of Current User...
+for /f "skip=2 tokens=1,2,*" %%a in ('reg query HKCU\Environment /v path') do (Set "_UserPath=%%c")
+
+REM Checking, if the Path already has path to Bat
+for /f "tokens=*" %%A in ('StrSplit ^; "!_UserPath!"') do (
+	REM Echo.%%A
+	FOR %%a in (!_len!) do (
+		Set "_Temp=%%~A"
+		if /i "!_Temp:~0,%%~a!" NEQ "!_path!" (Set "_NewPath=!_NewPath!!_Temp!;")
+		)
+	)
+Set /p ".=Removing Batcenter From PATH... " <nul
+REM Removing BatCenter path from Environment variable...
+reg add HKCU\Environment /v Path /d "!_NewPath!" /f 2>nul >nul
+Cd/ 2>nul 2>&1 >nul 
+RD /S /Q "!_path!" 2>nul 2>&1 >nul 
+Echo.[Done]
+Exit /b
 Goto :EOF
 
 :Installed_List
-If NOT Exist "Files\Installed.txt" (
+If NOT Exist "Temp\_Plugins.installed" (
 	Dir /b "Zips\*.zip" > "!Temp!\List.txt" 2>nul
 	If /i !Errorlevel! NEQ 0 (Echo. NOTHING is INSTALLED YET^^! && Goto :EOF)
-	
-	For /f "usebackQ tokens=* delims=." %%A in ("%Temp%\List.txt") do (
-		Set "_Temp=%%~A"
-		
-		REM Checking if the name of the file is - index number or NOT
-		For /L %%X in (0,1,9) do (Set "_Temp=!_Temp:%%~X=!")
-		
-		IF Not Defined _Temp (Echo.%%~A>>"Files\Installed.txt")
+
+	Del /q /f "plugins\*.*" >nul 2>nul
+
+	REM Checking, if fixing of older batcenter SYSTEM is needed...
+	Set _Temp=0
+	For /f "tokens=* delims=." %%A in ('Dir /b "Zips\*.zip"') do (If %%~nA LSS 100000 (Set /A _Temp+=1))
+	if !_Temp! GTR 0 (
+		If Exist "Index\id.index" (Del /f /q "Index\id.index" >nul 2>nul)
+
+		REM Getting Json files of each host...
+		For /f "tokens=*" %%a in (hosts.txt) do (For %%A in ("id") do (Type "Json\%%a.json" | jq ".[] .%%~A" >> "Index\%%~A.index"))
+
+		For /f "tokens=1,2* delims=." %%A in ('Dir /b "Zips\*.zip"') do (
+			For /f "tokens=*" %%a in ('ReadLine "Index\id.index" %%~nA') do (Set "_GID=%%~a")
+
+			Ren "Zips\%%~nA.zip" "!_GID!.zip" 2>nul >nul
+			)
+		)
+
+	For /f "tokens=1,2* delims=." %%A in ('Dir /b "Zips\*.zip"') do (
+		REM Checking if the name of the file is - Numeric or alphabet
+		Set /A _Temp=%%~nA / 1
+
+		IF /i "!_Temp!" NEQ "0" (
+			Call :GetLocalID "%%~nA" _Index_Number
+			Call :Install_Tracking !_Index_Number!
+			pushd plugins
+			7za e -y "..\Zips\%%~nA.zip" >nul
+			REM Removing Empty Folders...
+			For /f "tokens=*" %%a in ('dir /b /a:d') do (Rd /S /Q "%%~a")
+			Popd
+			)
 		)
 	)
 
 REM Tracking Number of installed Plugins in system...
 Set _Count=0
-
-For /f "usebackQ tokens=* delims=." %%A in ("Files\Installed.txt") do (
-	If Not Defined _Temp (ReadLine "Index\name.index" %%~A && Set /A _Count+=1)
+Echo. ----------------------- Installed Plugins ------------------------
+If Exist "Temp\_Plugins.installed" (
+For /f "usebackQ tokens=*" %%A in ("Temp\_Plugins.installed") do (
+	Call :GetLocalID %%~A _Index_Number
+	ReadLine "Index\name.index" !_Index_Number!
+	Set /A _Count+=1
 	)
+)
 If !_Count! == 0 (Echo. NOTHING is INSTALLED YET^^!)
+Echo. ------------------------------------------------------------------
 Goto :EOF
 
 
@@ -276,9 +323,37 @@ For /f "tokens=*" %%A in ('dir /b /a:d') do (Rd /S /Q "%%~A")
 Popd
 Echo. Extracted...!
 Echo. UPDATING DATABASE...
+Call :Install_Tracking "!_Index_Number!"
+Echo. UPDATED^^!
+goto :End
 
-REM Adding the Index of the Installed Plugin in INSTALLED PLUGINs list
-Echo.!_Index_Number!>> "Files\_Plugins.installed"
+:Install_Tracking
+SetLocal
+Set "_Index_Number=%~1"
+Call :GetGithubID !_Index_Number! _Github_ID
+
+REM Verifying, if the plugin is already in the list of Installed plugins...
+IF exist "Temp\_Plugins.installed" (
+	Set _Temp=0
+	for /f "tokens=*" %%A in ('type "Temp\_Plugins.installed"') do (if /i "%%~A" == "!_Github_ID!" (Set /A _Temp+=1))
+	If !_Temp! NEQ 0 (Goto :EOF)
+	)
+
+REM Adding the ID of the Installed Plugin in INSTALLED PLUGINs list
+Echo.!_Github_ID!>> "Temp\_Plugins.installed"
+
+For /f "tokens=*" %%A in ('ReadLine "Index\name.index" !_Index_Number!') do (Echo. REGISTERING Plugin... %%~A)
+
+REM As, Registering a plugin takes some time ... I want to show some progress alognside...
+REM For the Sake of Real-Time Showing Progress...
+Set /A _Count=0
+Set _Temp_Count=0
+Set _BarLength=75
+for /f "skip=16 tokens=1,2,3,4,5,*" %%a in ('7za l "Zips\!_Github_ID!.zip"') do (Set /a _Count+=1)
+
+REM Checking Current CMD Size...
+Call GetDim _Rows _Columns
+Set /A _BarLength=!_Columns! - 5
 
 REM Keeping names of all files those are Installed...
 
@@ -291,48 +366,54 @@ REM In other words, If a single file is being used by multiple Plugins, then it 
 REM So, when user uninstalls a plugin from system - He/she would not want to accidently make other plugins
 REM DEAD/Unfunctional because of the one dependency. (e.g: batbox.exe is used by many batch plugins)
 
-If Exist "Files\_!_Index_Number!.content" (Del /f /q "Files\_!_Index_Number!.content" >nul 2>nul)
-for /f "skip=16 tokens=1,2,3,4,5,*" %%a in ('7za l "Zips\!_Index_Number!.zip"') do (
+If Exist "Temp\_!_Index_Number!.content" (Del /f /q "Temp\_!_Index_Number!.content" >nul 2>nul)
+for /f "skip=16 tokens=1,2,3,4,5,*" %%a in ('7za l "Zips\!_Github_ID!.zip"') do (
+	REM Just simple calculation for showing current progress on console screen...
+	Set /A _Temp_Count+=1
+	Call Progress !_BarLength! !_Temp_Count! !_Count!
+
 	REM Checking, if the current thing is file or a folder...
 	Set "_Temp=%%~c"
 	
 	Set _Dot=F
 	REM Check, if there is any '.' in the _Temp... (So, that we can consider the line to be processed)
-	(echo !_Temp! | findstr /ic:"." >nul 2>nul) && (Set _Dot=T) || (Set _Dot=F)
+	If /i "!_Temp!" NEQ "!_Temp:.=_!" (Set _Dot=T) ELSE (Set _Dot=F)
 	
 	if /i "!_Dot!" == "T" (
 		REM Checking for the character 'D' to be present in the ATTRIBUTES...
 		Set _Folder=T
-		(echo !_Temp! | findstr /ic:"D" >nul 2>nul) && (Set _Folder=T) || (Set _Folder=F)
+		If /i "!_Temp!" NEQ "!_Temp:D=_!" (Set _Folder=T) ELSE (Set _Folder=F)
 		if /i "!_Folder!" == "F" (
-			Echo %%~nxf>>"Files\_!_Index_Number!.content"
+			Echo %%~nxf>>"Temp\_!_Index_Number!.content"
 			REM Checking if the file is IMMUNE or NOT
 			If Exist "plugins\%%~nxf" (
 				REM Checking if the IMMUNE file is already in the DB List or NOT
-				Set _Count=0
-				If Exist "Files\_Immune.installed" (For /f "tokens=*" %%A in ('type "Files\_Immune.installed"') do (If /I "%%~A" == "%%~nxf" (Set /A _Count+=1)))
-				If !_Count! == 0 (Echo.%%~nxf>>"Files\_Immune.installed")
+				Set _Temp=0
+				If Exist "Temp\_Immune.installed" (For /f "tokens=*" %%A in ('type "Temp\_Immune.installed"') do (If /I "%%~A" == "%%~nxf" (Set /A _Temp+=1)))
+				If !_Temp! == 0 (Echo.%%~nxf>>"Temp\_Immune.installed")
 				)
 			)
 		)
 	)
-Echo. UPDATED^^!
-goto :End
+Endlocal
+Goto :EOF
+
 
 REM ============================================================================
 :Download
 Set _Index_Number=%~1
 If /I "!_Index_Number!" == "" (Goto :EOF)
+Call :GetGithubID !_Index_Number! _Github_ID
 
 REM Downloading the required Repository...
-If not Exist "Zips\!_Index_Number!.zip" (
-	Wget "https://github.com/!_RepoFullName:"=!/archive/!_RepoBranch:"=!.zip" -O "Zips\!_Index_Number!.zip" -q --tries=5 --show-progress --timeout=5
+If not Exist "Zips\!_Github_ID!.zip" (
+	Wget "https://github.com/!_RepoFullName:"=!/archive/!_RepoBranch:"=!.zip" -O "Zips\!_Github_ID!.zip" -q --tries=5 --show-progress --timeout=5
 	) ELSE (
 	Echo. Already Installed...!
-	Echo. Overwrite Older Files of '!_RepoName:~1!' - ReDownload?
+	Echo. Do You want to ReDownlaod '!_RepoName:~1!' ?
 	Set _Temp=N
-	if Not Defined _y (Set /P _Temp=[Y or N] :) ELSE (Set _Temp=y)
-	if /i "%_Temp%" == "y" (Wget "https://github.com/!_RepoFullName:"=!/archive/!_RepoBranch:"=!.zip" -O "Zips\!_Index_Number!.zip" -q --tries=5 --show-progress --timeout=5)
+	if Not Defined _y (Set /P "_Temp=[Y or N] [Default:N] ") ELSE (Set _Temp=y)
+	if /i "!_Temp!" == "y" (Wget "https://github.com/!_RepoFullName:"=!/archive/!_RepoBranch:"=!.zip" -O "Zips\!_Github_ID!.zip" -q --tries=5 --show-progress --timeout=5)
 	)
 Goto :EOF
 
@@ -341,6 +422,19 @@ REM ============================================================================
 Set _TempString=%~1
 StrSurr [] "!_TempString!" > "!Temp!\Tmp.tmp"
 Set /P %~2= < "!Temp!\Tmp.tmp"
+Goto :EOF
+
+REM ============================================================================
+:GetLocalID [_Github_ID] [_VariableName]
+Set _GID=%~1
+Set %~2=
+For /f "eol=- skip=2 tokens=1,2* delims=]" %%A in ('find /i /n "!_GID!" "Index\id.index"') do (Set "_Result=%%~A")
+Set "%~2=!_Result:~1!"
+Goto :EOF
+
+REM ============================================================================
+:GetGithubID [_Index_Number] [_VariableName]
+For /f "tokens=*" %%A in ('ReadLine "Index\id.index" %~1') do (Set "%~2=%%~A")
 Goto :EOF
 
 REM ============================================================================
@@ -353,7 +447,7 @@ Call :Get_Max_Index _Max_Index
 If !_Index_Number! GTR !_Max_Index! (Echo. Index is more than available List.&&Goto:EOF)
 
 REM Fetching Details of Selected Repo...
-For %%A in ("name" "full_name" "default_branch" "license.name" "size" "description" "owner.login" "owner.avatar_url" "svn_url" "created_at" "updated_at") do (
+For %%A in ("name" "full_name" "default_branch" "license.name" "size" "description" "owner.login" "owner.avatar_url" "svn_url" "created_at" "updated_at" "id") do (
 	If /i "%%~A" == "name" (Set _var=_RepoName)
 	If /i "%%~A" == "full_name" (Set _var=_RepoFullName)
 	If /i "%%~A" == "default_branch" (Set _var=_RepoBranch)
@@ -365,6 +459,7 @@ For %%A in ("name" "full_name" "default_branch" "license.name" "size" "descripti
 	If /i "%%~A" == "svn_url" (Set _var=_RepoLink)
 	If /i "%%~A" == "created_at" (Set _var=_RepoInit)
 	If /i "%%~A" == "updated_at" (Set _var=_RepoUpdate)
+	If /i "%%~A" == "id" (Set _var=_RepoID)
 	ReadLine "Index\%%~A.index" !_Index_Number! > "!Temp!\tmp.temp"
 	Set /P !_var!= < "!Temp!\tmp.temp"
 	)
@@ -393,10 +488,11 @@ Set _Len=!Errorlevel!
 
 If !_Len! GEQ 50 (Set _RepoDes=!_RepoDes:~0,50!...)
 
-Echo. --------------------------------------------------------------------------
+Echo. --------------------------------------------------------------------
 Echo. Name:			!_RepoName:~1!
 Echo. Owner:			!_RepoOwner!
 Echo. Local-ID:		!_Index_Number!
+Echo. Github-ID:		!_RepoID!
 Echo. Created:		!_RepoInit:~1,10!
 Echo. Updated-On:		!_RepoUpdate:~1,10!
 Echo. Branch:		!_RepoBranch:"=!
@@ -404,8 +500,8 @@ Echo. License:		!_RepoLicense:"=!
 Echo. Size:			!_RepoSize! KBs
 Echo. Description:		!_RepoDes!
 Echo. Link:			!_RepoLink:"=!
-Echo. -------------------------------------------------------------------------
-Echo. INSTALL THIS WITH: "bat install !_Index_Number!"
+Echo. --------------------------------------------------------------------
+If /i "%_1%" == "Detail" (Echo. INSTALL THIS WITH: "bat install !_Index_Number!")
 REM Echo @timeout /t 5 ^>nul >"%Temp%\effect1.bat"
 REM Echo @cmdbkg >>"%Temp%\effect1.bat"
 REM Echo @exit >>"%Temp%\effect1.bat"
@@ -463,7 +559,7 @@ If !_online_ver! GTR !_ver! (
 	Echo REM Adjusting and transferring all files to new path...
 	Echo If Exist "%SystemDrive%\system\Bat\hosts.txt" ^(Start "" /SHARED /WAIT /B Transfer.bat^)
 	Echo Echo. REMOVING JUNK!
-	Echo Del /f /q "Zips\BatCenter.zip" 
+	Echo Del /f /q "!_path!\Zips\BatCenter.zip" 
 	Echo Pause
 	) >"!Temp!\UpdateBat.bat"
 	Set _UpdateBat=True
@@ -480,7 +576,7 @@ For /f "tokens=*" %%a in (hosts.txt) do (
 	wget "https://api.github.com/users/%%a/repos?per_page=100000&page=1" -O "Json\%%a.json" -q --tries=5 --show-progress --timeout=5
 
 	REM Indexing Details...
-	For %%A in ("name" "full_name" "default_branch" "license.name" "size" "description" "owner.login" "owner.avatar_url" "svn_url" "created_at" "updated_at") do (Type "Json\%%a.json" | jq ".[] .%%~A" >> "Index\%%~A.index")
+	For %%A in ("name" "full_name" "default_branch" "license.name" "size" "description" "owner.login" "owner.avatar_url" "svn_url" "created_at" "updated_at" "id") do (Type "Json\%%a.json" | jq ".[] .%%~A" >> "Index\%%~A.index")
 	)
 
 REM Setting _Count to '0' (Preventing mixing-up of numbers after "Bat Update")

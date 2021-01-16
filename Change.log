@@ -32,5 +32,15 @@ _________________________v.2.4__________________________
 14. Removed Displaying Extra Details after UPDATING BATCENTER to the LATEST version. (Thank Anic17)
 15. Improved the Detection of the installed files, with improved code (Thank Anic17)
 
-___Coming SOON...
+----------------------2021 Jan, 9 ----------------------
+_________________________v.2.5__________________________
+
+16. Now, user do not need to Log-off/Log-in after installing Batcenter for the first time. (Mostly) (Thank Anic17)
+17. Better Tracking of the installed plugins, and files/dependencies associated with each plugins. This will help during UNINSTALLING individual plugins later.
+18. Fixed BUG: parameter iList was not properly registering the installed plugins. Fixed that.
+19. Fixed BUG: [INSTALL THIS WITH: "bat install 112"]  this message will only appear on calling 'detail' parameter.
+20. Improved Code For REGISTRING the Installed plugins. (Thanks Anic17 for the awesome suggestion)
+21. Fixed Logical Bug: LOCAL-ID is dynamic, can change - So, Using Github-ID for targetting projects. But, user can still use Local-ID for the sake of easiness/user friendly.
+
+Yet to be added...
 Added a new Parameter 'Uninstall' - to uninstall individual plugins from system.
