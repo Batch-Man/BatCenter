@@ -308,6 +308,8 @@ IF /i "!_Error!" NEQ "T" (
 Call :Get_Max_Index _Max_Index
 If !_Index_Number! GTR !_Max_Index! (Echo. Index is more than available List.&&Goto:End)
 
+call :GetGithubID !_Index_Number! _Github_ID
+
 REM Echo !_Index_Number!
 Call :FetchDetails !_Index_Number!
 Echo. Initiating Download...
@@ -316,8 +318,9 @@ Echo. Repository DOWNLOADED!
 Echo. Extracting... to '%_path%\Plugins'
 Pushd Plugins
 Echo.
-for /f "skip=13 tokens=*" %%a in ('7za l "..\Zips\!_Index_Number!.zip"') do (echo %%a)
-7za e -y "..\Zips\!_Index_Number!.zip" >nul
+7za l "..\Zips\!_Github_ID!.zip" > nul 2>&1
+rem for /f "skip=13 tokens=5*" %%a in (' ^| findstr /c:"."') do (echo %%b)
+7za e -y "..\Zips\!_Github_ID!.zip" >nul
 REM Removing Empty Folders...
 For /f "tokens=*" %%A in ('dir /b /a:d') do (Rd /S /Q "%%~A")
 Popd
@@ -445,6 +448,8 @@ IF Not Defined _Index_Number (Goto :EOF)
 REM Checking the max number of the plugins available
 Call :Get_Max_Index _Max_Index
 If !_Index_Number! GTR !_Max_Index! (Echo. Index is more than available List.&&Goto:EOF)
+for /f "tokens=2 delims=:" %%A in ('chcp') do set "codepage=%%A"
+chcp 65001 > nul
 
 REM Fetching Details of Selected Repo...
 For %%A in ("name" "full_name" "default_branch" "license.name" "size" "description" "owner.login" "owner.avatar_url" "svn_url" "created_at" "updated_at" "id") do (
@@ -453,7 +458,7 @@ For %%A in ("name" "full_name" "default_branch" "license.name" "size" "descripti
 	If /i "%%~A" == "default_branch" (Set _var=_RepoBranch)
 	If /i "%%~A" == "license.name" (Set _var=_RepoLicense)
 	If /i "%%~A" == "size" (Set _var=_RepoSize)
-	If /i "%%~A" == "description" (Set _var=_RepoDes)
+	If /i "%%~A" == "description" (Set "_var=_RepoDes" & echo."%%~A")
 	If /i "%%~A" == "owner.login" (Set _var=_RepoOwner)
 	If /i "%%~A" == "owner.avatar_url" (Set _var=_RepoAvatarURL)
 	If /i "%%~A" == "svn_url" (Set _var=_RepoLink)
@@ -501,6 +506,7 @@ Echo. Size:			!_RepoSize! KBs
 Echo. Description:		!_RepoDes!
 Echo. Link:			!_RepoLink:"=!
 Echo. --------------------------------------------------------------------
+chcp %codepage% > nul
 If /i "%_1%" == "Detail" (Echo. INSTALL THIS WITH: "bat install !_Index_Number!")
 REM Echo @timeout /t 5 ^>nul >"%Temp%\effect1.bat"
 REM Echo @cmdbkg >>"%Temp%\effect1.bat"
