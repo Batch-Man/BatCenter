@@ -37,7 +37,8 @@ If /i "%~1" == "/?" (goto :help)
 If /i "%~1" == "-h" (goto :help)
 If /i "%~1" == "-help" (goto :help)
 If /i "%~1" == "help" (goto :help)
-If /i "%~1" == "ver" (Echo.%_ver%&Goto :End)
+If /i "%~1" == "ver" (
+%_ver%&Goto :End)
 If /i "%~1" == "" (goto :help)
 
 REM Saving parameters to variables...
@@ -458,7 +459,7 @@ For %%A in ("name" "full_name" "default_branch" "license.name" "size" "descripti
 	If /i "%%~A" == "default_branch" (Set _var=_RepoBranch)
 	If /i "%%~A" == "license.name" (Set _var=_RepoLicense)
 	If /i "%%~A" == "size" (Set _var=_RepoSize)
-	If /i "%%~A" == "description" (Set "_var=_RepoDes" & echo."%%~A")
+	If /i "%%~A" == "description" (Set "_var=_RepoDes")
 	If /i "%%~A" == "owner.login" (Set _var=_RepoOwner)
 	If /i "%%~A" == "owner.avatar_url" (Set _var=_RepoAvatarURL)
 	If /i "%%~A" == "svn_url" (Set _var=_RepoLink)
