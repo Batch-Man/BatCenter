@@ -20,3 +20,5 @@ Download the installation script from the following link:
 
 ## Usage
 Read [USAGE.md](https://github.com/Batch-Man/BatCenter-by-Kvc/blob/main/USAGE.md) to get the usage about this plugin.
+
+Article- https://batch-man.com/batcenter/
