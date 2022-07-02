@@ -21,8 +21,8 @@ Download the installation script from the following link:
 ## Usage
 Read [USAGE.md](https://github.com/Batch-Man/BatCenter-by-Kvc/blob/main/USAGE.md) to get the usage about this plugin.
 
-Article- https://batch-man.com/batcenter/
 
-Video for window 10- https://www.youtube.com/watch?v=r7xMy4lSw2k
+Article: https://batch-man.com/batcenter/
 
-Video for window 7- https://www.youtube.com/watch?v=Wei8PUCEw4o
+[Windows 10 demonstration video](https://www.youtube.com/watch?v=r7xMy4lSw2k)  
+[Windows 7 demonstration video](https://www.youtube.com/watch?v=Wei8PUCEw4o)
