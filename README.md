@@ -2,7 +2,7 @@
 
 This utility will help you to search, download, install, view the batch plugins from selected sources, you can search and see details about them before downloading.
 
-<img src="https://i.ibb.co/X8FRd9z/batcenter-antivirus-demo.png">
+![batcenter](https://i.ibb.co/X8FRd9z/batcenter-antivirus-demo.png)
 
 # Usage
 Read [USAGE.md](https://github.com/Batch-Man/BatCenter-by-Kvc/blob/main/USAGE.md) to get the usage about this plugin.  
