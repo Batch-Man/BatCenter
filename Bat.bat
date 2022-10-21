@@ -68,7 +68,6 @@ CD /d "%_path%"
 If exist "FirstLaunch.txt" (
 	Echo Setting up Bat-Center by Kvc...
 	Del /F /q "FirstLaunch.txt" >nul 2>nul
-	wget "https://raw.githubusercontent.com/Batch-Man/BatCenter/main/Install/hosts.txt" -O "%_path%\hosts.txt" >nul 2>nul
 	Call :Update
 	Set _Found=
 
@@ -575,10 +574,10 @@ REM Removing Older Index Files...
 Del /f /q "Index\*.*" >nul 2>nul
 
 REM Need to check, if the Basic Json files are present...Otherwise, we'll update!
-If Not Exist "hosts.txt" (Wget "https://raw.githubusercontent.com/Batch-Man/BatCenter/main/Install/hosts.txt" -O "hosts.txt" -q --tries=5 --show-progress --timeout=5) Else (If /i "%_2%" NEQ "" (find /i "%_2%" "hosts.txt" >nul 2>nul && Echo. Already in DB... || (Echo.>>hosts.txt&Echo.%_2%>>hosts.txt)))
+If Not Exist "Files\hosts.txt" (Wget "https://raw.githubusercontent.com/Batch-Man/BatCenter/main/Install/hosts.txt" -O "Files\hosts.txt" -q --tries=5 --show-progress --timeout=5) Else (If /i "%_2%" NEQ "" (find /i "%_2%" "Files\hosts.txt" >nul 2>nul && Echo. Already in DB... || (Echo.>>"Files\hosts.txt"&Echo.%_2%>>"Files\hosts.txt")))
 
 REM Getting Json files of each host...
-For /f "tokens=*" %%a in (hosts.txt) do (
+For /f "usebackq tokens=*" %%a in ("Files\hosts.txt") do (
 	wget "https://api.github.com/users/%%a/repos?per_page=100000&page=1" -O "Json\%%a.json" -q --tries=5 --show-progress --timeout=5
 
 	REM Indexing Details...
