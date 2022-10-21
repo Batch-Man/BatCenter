@@ -143,7 +143,7 @@ Echo. This feature will come soon...
 Goto :EOF
 
 :Reset
-Del /f /q "hosts.txt" 
+Del /f /q "Files\hosts.txt" 
 Del /f /q "Plugins\*.*"
 Del /f /q "Index\*.*"
 Del /f /q "Json\*.*"
