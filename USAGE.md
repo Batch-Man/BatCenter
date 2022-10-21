@@ -19,7 +19,7 @@
 ___
 
 ## 1. Update
-Checks for the available updates for the BatCentre and refreshes the available local data with the new data available online.  
+Checks for the available updates for the BatCentre and refreshes the available local Data with the new data available online.  
 **Syntax:** ``Call Bat Update [Github_User]``  
 **Example:** ``Call Bat Update`` - To update DB from Default Hosts  
 **Example:** ``Call Bat Update Microsoft``- To Update DB from Microsoft github  
@@ -36,14 +36,14 @@ ___
 You can use search keywords in order to search for the the required batch plugin / utility from list of available plugins.  
 **Syntax:** ``Call Bat Search [Term1] [Term2] [Term3] ...``  
 **Example:** ``Call Bat Search batbox 3.1``  
-**Example:** ``Call Bat Search batbox -y``  -Supresses any confirmation from the prompt and shows results  
+**Example:** ``Call Bat Search batbox -y``  -Supresses any Confirmation from the prompt and shows Results  
 ___
 
 ## 4. Install
 Downloads and installs the selected batch plugins in the current computer so that they can be used as an internal/inbuilt CMD command.  
 **Syntax:** ``Call Bat Install [Local-ID | [Term1] [Term2] [Term3] ...]``  
 **Example:** ``Call Bat Install batbox 3.1``  -If only one unique result is found - then -> ***downloads and installs***  
-**Example:** ``Call Bat Install batbox 3.1 -y``  -Supresses any confirmation from the prompt and shows Results  
+**Example:** ``Call Bat Install batbox 3.1 -y``  -Supresses any Confirmation from the prompt and shows Results  
 **Example**: ``Call Bat Install 10``  -uses Local-ID to target and download the plugin to computer  (use ```bat detail 10``` to see details of it)
 ___
 
@@ -56,9 +56,9 @@ Displays formatted detail about the selected batch plugin so that user can verif
 ___
 
 ## 6. Reset
-Resets the BatCenter to its initial form (New installation) or uninstalls BatCentre from the current system without leaving any traces behind.  
+Resets the BatCentre to its initial form (New installation) or uninstalls BatCentre from the current system without leaving any traces behind.  
 **Syntax:** ``Call Bat Reset [all]``  
-**Example:** ``Call Bat Reset``  -Resets the BatCenter to its initial (Newly installed) form - Clearing DB and removing installed plugins.  
+**Example:** ``Call Bat Reset``  -Resets the BatCenter to its initial (Newly installed) form - Clearing DB & removing installed plugins.  
 **Example:** ``Call Bat Reset all``  -Removes BatCenter from the system without leaving any traces behind.
  
 ___
@@ -77,14 +77,14 @@ Prints the current version of installed BatCenter.
 ___
 
 ## 9. iList
-List all the currently installed plugins in the system.  
+List Out all the Currently Installed Plugins in the system.  
 **Syntax:** ``call Bat iList``  
 **Example:** ``Call Bat iList``  
 
 ___
 ___
 ## Important
-If you are calling BatCenter directly from the console, then you do not need to use the `call` before `bat`, you can skip to the shorter syntax as:  ``Bat Update``
+If you are calling BatCenter directly from the CMD console, then you do not need to use the `call` before `bat`, you can skip to the shorter syntax as:  ``Bat Update``
 ___
 ___
 

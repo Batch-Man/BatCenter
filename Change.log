@@ -42,5 +42,18 @@ _________________________v.2.5__________________________
 20. Improved Code For REGISTRING the Installed plugins. (Thanks Anic17 for the awesome suggestion)
 21. Fixed Logical Bug: LOCAL-ID is dynamic, can change - So, Using Github-ID for targetting projects. But, user can still use Local-ID for the sake of easiness/user friendly.
 
+----------------------2021 Dec, 13 ----------------------
+_________________________v20211213__________________________
+
+22. Changed the version Control number related to DATE in the format - YYYYMMDD
+
+----------------------2022 Oct, 21 ----------------------
+_________________________v20221021__________________________
+
+23. Improved the installer file to be independent of 'www.batch-man.com' server.
+24. Improved update code for directly from github.
+
+
+
 Yet to be added...
 Added a new Parameter 'Uninstall' - to uninstall individual plugins from system.

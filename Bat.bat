@@ -26,19 +26,20 @@ REM This program is Created by Kvc at 'Tue 11/03/2020 - 16:12'
 REM This program will help you download the batch plugins from selected
 REM sources, you can search and see details about them before downloading
 REM For More Visit: www.batch-man.com
+REM OR
+REM https://github.com/Batch-Man/BatCenter
+REM 
 
 
 REM Setting version information...
-Set _ver=2.5
-
+Set _ver=20221021
 
 REM Checking for various parameters of the function...
 If /i "%~1" == "/?" (goto :help)
 If /i "%~1" == "-h" (goto :help)
 If /i "%~1" == "-help" (goto :help)
 If /i "%~1" == "help" (goto :help)
-If /i "%~1" == "ver" (
-%_ver%&Goto :End)
+If /i "%~1" == "ver" (Echo.%_ver%&Goto :End)
 If /i "%~1" == "" (goto :help)
 
 REM Saving parameters to variables...
@@ -82,7 +83,7 @@ If exist "FirstLaunch.txt" (
 		reg add HKCU\Environment /v Path /d "!_UserPath!;!_path!;!_path!\Files;!_path!\plugins" /f
 		)
 	Echo Setup Completed Successfully!
-	REM Updating the environment path, without restarting.... (Thanks anic17)
+	REM Updating the environment path, without restarting.... (Thanks @anic17)
 	Call EnvUpdate.bat
 	if /i "%_1%" == "Update" (Goto :End)
 	)
@@ -112,24 +113,21 @@ REM Saving parameters to variables...
 )
 
 REM Acting as per the Passed parameters...
+Set _Valid=F
 
-if /i "%_1%" == "Update" (Call :Update)
-if /i "%_1%" == "ilist" (Call :Installed_List)
-if /i "%_1%" == "list" (Call :List)
-if /i "%_1%" == "search" (Call :Search)
-if /i "%_1%" == "install" (Call :Install)
-if /i "%_1%" == "uninstall" (Call :Uninstall)
-if /i "%_1%" == "detail" (Call :Details)
-if /i "%_1%" == "reset" (If /I "%_2%" == "all" (Call :ResetAll) ELSE (Call :Reset))
+if /i "%_1%" == "Update" (Call :Update && Set _Valid=T)
+if /i "%_1%" == "ilist" (Call :Installed_List && Set _Valid=T)
+if /i "%_1%" == "list" (Call :List && Set _Valid=T)
+if /i "%_1%" == "search" (Call :Search && Set _Valid=T)
+if /i "%_1%" == "install" (Call :Install && Set _Valid=T)
+if /i "%_1%" == "uninstall" (Call :Uninstall && Set _Valid=T)
+if /i "%_1%" == "detail" (Call :Details && Set _Valid=T)
+if /i "%_1%" == "reset" (If /I "%_2%" == "all" (Call :ResetAll) ELSE (Call :Reset) && Set _Valid=T)
 
-REM Echo. Invalid Parameter...
-REM ECHO. TRY using 'Bat /?' for help!
-REM Space for the new future options :]
-REM BUFFER FOR FUTURE UPDATES...
-REM BUFFER FOR FUTURE UPDATES...
-REM BUFFER FOR FUTURE UPDATES...
-REM BUFFER FOR FUTURE UPDATES...
-REM BUFFER FOR FUTURE UPDATES...
+If /I "%_Valid%" == "F" (
+	Echo. Invalid Parameter...
+	ECHO. TRY using 'Bat /?' for help!
+)
 Goto :End
 
 REM ============================================================================
@@ -529,7 +527,7 @@ Call :CheckConnection _Error
 If %_Error% NEQ 0 (Goto :End)
 
 REM Checking for Limited API calls condition...
-If exist "Files\BlockUpdate.txt" (Echo.UPDATE BLOCKED! TRY AFTER SOMETIME...&&Echo.Limiting API calls only 180 times/hour && Goto :End)
+If exist "Files\BlockUpdate.txt" (Echo.UPDATE BLOCKED! TRY AFTER SOMETIME...&&Echo.Limiting API calls only 180 times/hour, So your IP will not get Blacklisted. && Goto :End)
 
 REM Checking for BatCenter Update...
 Set _UpdateBat=
@@ -576,7 +574,7 @@ REM Removing Older Index Files...
 Del /f /q "Index\*.*" >nul 2>nul
 
 REM Need to check, if the Basic Json files are present...Otherwise, we'll update!
-If Not Exist "hosts.txt" (Wget "www.batch-man.com/bat/hosts.txt" -O "hosts.txt" -q --tries=5 --show-progress --timeout=5) Else (If /i "%_2%" NEQ "" (find /i "%_2%" "hosts.txt" >nul 2>nul && Echo. Already in DB... || (Echo.>>hosts.txt&Echo.%_2%>>hosts.txt)))
+If Not Exist "hosts.txt" (Wget "https://raw.githubusercontent.com/Batch-Man/BatCenter/main/Install/hosts.txt" -O "hosts.txt" -q --tries=5 --show-progress --timeout=5) Else (If /i "%_2%" NEQ "" (find /i "%_2%" "hosts.txt" >nul 2>nul && Echo. Already in DB... || (Echo.>>hosts.txt&Echo.%_2%>>hosts.txt)))
 
 REM Getting Json files of each host...
 For /f "tokens=*" %%a in (hosts.txt) do (
