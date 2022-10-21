@@ -68,6 +68,7 @@ CD /d "%_path%"
 If exist "FirstLaunch.txt" (
 	Echo Setting up Bat-Center by Kvc...
 	Del /F /q "FirstLaunch.txt" >nul 2>nul
+	wget "https://raw.githubusercontent.com/Batch-Man/BatCenter/main/Install/hosts.txt" -O "hosts.txt" >nul 2>nul
 	Call :Update
 	Set _Found=
 

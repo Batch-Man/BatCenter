@@ -39,7 +39,7 @@ Set /p ".=EXTRACTING DOWNLOADED FILES..." <nul
 7za e "bat.7z" -y >nul 2>nul
 Echo. [DONE]
 Set /p ".=CLEANING MESS..." <nul
-Del /f /q "..\bat.7z" >nul 2>nul
+Del /f /q "bat.7z" >nul 2>nul
 Echo. [DONE]
 Goto :FirstRun
 
