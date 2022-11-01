@@ -274,6 +274,17 @@ REM Saving the values of results in an array kind of structure...
 REM E.g: _Result[0], _Result[1] ...
 REM Where, _RCount contains the number of results and _Result is the array name
 If /i "%_2%" == "" (Echo. Search Term Missing... && Goto :End)
+SETLOCAL ENABLEDELAYEDEXPANSION
+set _isAll=%_2%
+call :LoCase _isAll
+If /i "%_isAll%" == "all" (
+	Call :Get_Max_Index _Max_Index
+	for /l %%x in (1, 1, !_Max_Index!) do (
+		Call :FetchDetails %%x
+		Call :Download %%x
+	)
+	Goto :End
+)
 Set _Index_Number=!_2!
 Call :check_Number !_2! _Error
 IF /i "!_Error!" NEQ "T" (
@@ -685,6 +696,37 @@ If Exist "Files\_Max_Index.count" (Set /p _Max_Index=<"Files\_Max_Index.count") 
 Endlocal && Set "%~1=%_Max_Index%"
 Goto :EOF
 
+:LoCase
+:: Subroutine to convert a variable VALUE to all lower case.
+:: The argument for this subroutine is the variable NAME.
+SET %~1=!%~1:A=a!
+SET %~1=!%~1:B=b!
+SET %~1=!%~1:C=c!
+SET %~1=!%~1:D=d!
+SET %~1=!%~1:E=e!
+SET %~1=!%~1:F=f!
+SET %~1=!%~1:G=g!
+SET %~1=!%~1:H=h!
+SET %~1=!%~1:I=i!
+SET %~1=!%~1:J=j!
+SET %~1=!%~1:K=k!
+SET %~1=!%~1:L=l!
+SET %~1=!%~1:M=m!
+SET %~1=!%~1:N=n!
+SET %~1=!%~1:O=o!
+SET %~1=!%~1:P=p!
+SET %~1=!%~1:Q=q!
+SET %~1=!%~1:R=r!
+SET %~1=!%~1:S=s!
+SET %~1=!%~1:T=t!
+SET %~1=!%~1:U=u!
+SET %~1=!%~1:V=v!
+SET %~1=!%~1:W=w!
+SET %~1=!%~1:X=x!
+SET %~1=!%~1:Y=y!
+SET %~1=!%~1:Z=z!
+GOTO:EOF
+
 
 REM ============================================================================
 :End
@@ -730,6 +772,7 @@ Echo. Example: Call Bat Search batbox 3.1
 Echo. Example: Call Bat Install batbox 3.1
 Echo. Example: Call Bat Install batbox 3.1 -y
 Echo. Example: Call Bat Install 10
+Echo. Example: Call Bat Install all
 Echo. Example: Call Bat Detail batbox 3.1
 Echo. Example: Call Bat Detail 10
 Echo. Example: Call Bat Reset
