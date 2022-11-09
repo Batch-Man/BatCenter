@@ -24,8 +24,8 @@ REM Script to install BatCenter by Kvc
 Echo. FETCHING FILES FROM SERVER...
 
 IF /I "%_Curl%" == "YES" (
-    Curl -L "https://github.com/Batch-Man/BatCenter/blob/main/Files/7za.exe?raw=true" --output "7za.exe" --progress-bar
-    Curl -L "https://github.com/Batch-Man/BatCenter/blob/main/Install/bat.7z?raw=true" --output "bat.7z" --progress-bar
+    Curl -L --ssl-no-revoke "https://github.com/Batch-Man/BatCenter/blob/main/Files/7za.exe?raw=true" --output "7za.exe" --progress-bar
+    Curl -L --ssl-no-revoke "https://github.com/Batch-Man/BatCenter/blob/main/Install/bat.7z?raw=true" --output "bat.7z" --progress-bar
     Goto :Extract
 )
 
