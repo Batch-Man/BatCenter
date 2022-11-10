@@ -212,9 +212,19 @@ If NOT Exist "Temp\_Plugins.installed" (
 			REM Removing Empty Folders...
 			For /f "tokens=*" %%a in ('dir /b /a:d') do (Rd /S /Q "%%~a")
 			Popd
-			)
 		)
 	)
+)
+
+IF not "%_2%"=="" (
+	if exist "C:\Users\%USERNAME%\AppData\Local\BatCenter\Temp\_%_2%.content" (
+		ReadLine "Index\name.index" %_2%
+		goto :EOF
+	) else (
+		Echo %_2% is NOT INSTALLED YET^^!
+		goto :EOF
+	)
+) 
 
 REM Tracking Number of installed Plugins in system...
 Set _Count=0

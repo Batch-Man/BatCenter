@@ -80,6 +80,7 @@ ___
 List Out all the Currently Installed Plugins in the system.  
 **Syntax:** ``call Bat iList``  
 **Example:** ``Call Bat iList``  
+**Example:** ``Call Bat iList 17`` 
 
 ___
 ___
