@@ -123,7 +123,7 @@ If /I "%_Valid%" == "F" (
 	ECHO. TRY using 'Bat /?' for help!
 )
 
-if /i "%_1%" == "Update" (Call :Update)
+if /i "%_1%" == "update" (Call :Update)
 if /i "%_1%" == "ilist" (Call :Installed_List)
 if /i "%_1%" == "list" (Call :List)
 if /i "%_1%" == "search" (Call :Search)
