@@ -114,20 +114,23 @@ REM Saving parameters to variables...
 
 REM Acting as per the Passed parameters...
 Set _Valid=F
-
-if /i "%_1%" == "Update" (Call :Update && Set _Valid=T)
-if /i "%_1%" == "ilist" (Call :Installed_List && Set _Valid=T)
-if /i "%_1%" == "list" (Call :List && Set _Valid=T)
-if /i "%_1%" == "search" (Call :Search && Set _Valid=T)
-if /i "%_1%" == "install" (Call :Install && Set _Valid=T)
-if /i "%_1%" == "uninstall" (Call :Uninstall && Set _Valid=T)
-if /i "%_1%" == "detail" (Call :Details && Set _Valid=T)
-if /i "%_1%" == "reset" (If /I "%_2%" == "all" (Call :ResetAll) ELSE (Call :Reset) && Set _Valid=T)
+for %%P in (update ilist list search install uninstall detail reset) do (
+	IF /i "%_1%" == "%%P" (set _Valid=True)
+)
 
 If /I "%_Valid%" == "F" (
 	Echo. Invalid Parameter...
 	ECHO. TRY using 'Bat /?' for help!
 )
+
+if /i "%_1%" == "Update" (Call :Update)
+if /i "%_1%" == "ilist" (Call :Installed_List)
+if /i "%_1%" == "list" (Call :List)
+if /i "%_1%" == "search" (Call :Search)
+if /i "%_1%" == "install" (Call :Install)
+if /i "%_1%" == "uninstall" (Call :Uninstall)
+if /i "%_1%" == "detail" (Call :Details)
+if /i "%_1%" == "reset" (If /I "%_2%" == "all" (Call :ResetAll) ELSE (Call :Reset))
 Goto :End
 
 REM ============================================================================
