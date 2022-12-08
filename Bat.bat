@@ -3,6 +3,7 @@ Setlocal EnableDelayedExpansion
 
 Set "_path=%LocalAppData%\BatCenter"
 Set "Original_Path=%path%"
+Set "CallDir=%CD%"
 If Not exist "%_path%" (Md "%_path%"&Echo.First Launch >"%_path%\FirstLaunch.txt")
 
 REM THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY
@@ -115,7 +116,7 @@ REM Saving parameters to variables...
 
 REM Acting as per the Passed parameters...
 Set _Valid=F
-for %%P in (update ilist list search install uninstall detail reset) do (
+for %%P in (update ilist list search install uninstall detail reset move) do (
 	IF /i "%_1%" == "%%P" (set _Valid=True)
 )
 
@@ -132,6 +133,7 @@ if /i "%_1%" == "install" (Call :Install)
 if /i "%_1%" == "uninstall" (Call :Uninstall)
 if /i "%_1%" == "detail" (Call :Details)
 if /i "%_1%" == "reset" (If /I "%_2%" == "all" (Call :ResetAll) ELSE (Call :Reset))
+if /i "%_1%" == "move" (Call :Move)
 Goto :End
 
 REM ============================================================================
@@ -279,6 +281,12 @@ IF /i "!_Error!" NEQ "T" (
 
 REM Echo !_Index_Number!
 Call :FetchDetails !_Index_Number!
+Goto :End
+
+:Move
+IF /i "%_2%"=="5s" (
+	Copy "%cd%\Files\5S.Bat" "%CallDir%\5S.Bat" >nul 2>nul
+)
 Goto :End
 
 REM ============================================================================
