@@ -531,6 +531,9 @@ REM Checking length of the Description...
 Call Getlen "!_RepoDes!"
 Set _Len=!Errorlevel!
 
+set _Silent=False
+IF /i "%_3%" == "/s" (set _Silent=True)
+
 If !_Len! GEQ 50 (Set _RepoDes=!_RepoDes:~0,50!...)
 
 IF %_Silent%==False (
