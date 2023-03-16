@@ -3,6 +3,7 @@ Setlocal EnableDelayedExpansion
 
 Set "_path=%LocalAppData%\BatCenter"
 Set "Original_Path=%path%"
+Set "CallDir=%CD%"
 If Not exist "%_path%" (Md "%_path%"&Echo.First Launch >"%_path%\FirstLaunch.txt")
 
 REM THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY
@@ -112,22 +113,27 @@ REM Saving parameters to variables...
 	Set _9=%~9
 )
 
+
 REM Acting as per the Passed parameters...
 Set _Valid=F
-
-if /i "%_1%" == "Update" (Call :Update && Set _Valid=T)
-if /i "%_1%" == "ilist" (Call :Installed_List && Set _Valid=T)
-if /i "%_1%" == "list" (Call :List && Set _Valid=T)
-if /i "%_1%" == "search" (Call :Search && Set _Valid=T)
-if /i "%_1%" == "install" (Call :Install && Set _Valid=T)
-if /i "%_1%" == "uninstall" (Call :Uninstall && Set _Valid=T)
-if /i "%_1%" == "detail" (Call :Details && Set _Valid=T)
-if /i "%_1%" == "reset" (If /I "%_2%" == "all" (Call :ResetAll) ELSE (Call :Reset) && Set _Valid=T)
+for %%P in (update ilist list search install uninstall detail reset move) do (
+	IF /i "%_1%" == "%%P" (set _Valid=True)
+)
 
 If /I "%_Valid%" == "F" (
 	Echo. Invalid Parameter...
 	ECHO. TRY using 'Bat /?' for help!
 )
+
+if /i "%_1%" == "update" (Call :Update)
+if /i "%_1%" == "ilist" (Call :Installed_List)
+if /i "%_1%" == "list" (Call :List)
+if /i "%_1%" == "search" (Call :Search)
+if /i "%_1%" == "install" (Call :Install)
+if /i "%_1%" == "uninstall" (Call :Uninstall)
+if /i "%_1%" == "detail" (Call :Details)
+if /i "%_1%" == "reset" (If /I "%_2%" == "all" (Call :ResetAll) ELSE (Call :Reset))
+if /i "%_1%" == "move" (Call :Move)
 Goto :End
 
 REM ============================================================================
@@ -212,9 +218,19 @@ If NOT Exist "Temp\_Plugins.installed" (
 			REM Removing Empty Folders...
 			For /f "tokens=*" %%a in ('dir /b /a:d') do (Rd /S /Q "%%~a")
 			Popd
-			)
 		)
 	)
+)
+
+IF not "%_2%"=="" (
+	if exist "C:\Users\%USERNAME%\AppData\Local\BatCenter\Temp\_%_2%.content" (
+		ReadLine "Index\name.index" %_2%
+		goto :EOF
+	) else (
+		Echo %_2% is NOT INSTALLED YET^^!
+		goto :EOF
+	)
+) 
 
 REM Tracking Number of installed Plugins in system...
 Set _Count=0
@@ -267,6 +283,12 @@ REM Echo !_Index_Number!
 Call :FetchDetails !_Index_Number!
 Goto :End
 
+:Move
+IF /i "%_2%"=="5s" (
+	Copy "%cd%\Files\5S.Bat" "%CallDir%\5S.Bat" >nul 2>nul
+)
+Goto :End
+
 REM ============================================================================
 :Install
 REM Looking for the Searched term and returning the Value in _Result variable.
@@ -274,6 +296,8 @@ REM Saving the values of results in an array kind of structure...
 REM E.g: _Result[0], _Result[1] ...
 REM Where, _RCount contains the number of results and _Result is the array name
 If /i "%_2%" == "" (Echo. Search Term Missing... && Goto :End)
+set _Silent=False
+IF /i "%_3%" == "/s" (set _Silent=True)
 SETLOCAL ENABLEDELAYEDEXPANSION
 set _isAll=%_2%
 call :LoCase _isAll
@@ -322,22 +346,22 @@ call :GetGithubID !_Index_Number! _Github_ID
 
 REM Echo !_Index_Number!
 Call :FetchDetails !_Index_Number!
-Echo. Initiating Download...
+IF /I %_Silent%==False (Echo. Initiating Download...)
 Call :Download !_Index_Number!
-Echo. Repository DOWNLOADED!
-Echo. Extracting... to '%_path%\Plugins'
+IF /I %_Silent%==False (Echo. Repository DOWNLOADED!)
+IF /I %_Silent%==False (Echo. Extracting... to '%_path%\Plugins')
 Pushd Plugins
-Echo.
+IF /I %_Silent%==False (Echo.)
 7za l "..\Zips\!_Github_ID!.zip" > nul 2>&1
 rem for /f "skip=13 tokens=5*" %%a in (' ^| findstr /c:"."') do (echo %%b)
 7za e -y "..\Zips\!_Github_ID!.zip" >nul
 REM Removing Empty Folders...
 For /f "tokens=*" %%A in ('dir /b /a:d') do (Rd /S /Q "%%~A")
 Popd
-Echo. Extracted...!
-Echo. UPDATING DATABASE...
+IF /I %_Silent%==False (Echo. Extracted...!)
+IF /I %_Silent%==False (Echo. UPDATING DATABASE...)
 Call :Install_Tracking "!_Index_Number!"
-Echo. UPDATED^^!
+IF /I %_Silent%==False (Echo. UPDATED^^!)
 goto :End
 
 :Install_Tracking
@@ -355,7 +379,9 @@ IF exist "Temp\_Plugins.installed" (
 REM Adding the ID of the Installed Plugin in INSTALLED PLUGINs list
 Echo.!_Github_ID!>> "Temp\_Plugins.installed"
 
-For /f "tokens=*" %%A in ('ReadLine "Index\name.index" !_Index_Number!') do (Echo. REGISTERING Plugin... %%~A)
+For /f "tokens=*" %%A in ('ReadLine "Index\name.index" !_Index_Number!') do (
+	IF %_Silent%==False (Echo. REGISTERING Plugin... %%~A)
+)
 
 REM As, Registering a plugin takes some time ... I want to show some progress alognside...
 REM For the Sake of Real-Time Showing Progress...
@@ -420,7 +446,11 @@ Call :GetGithubID !_Index_Number! _Github_ID
 
 REM Downloading the required Repository...
 If not Exist "Zips\!_Github_ID!.zip" (
-	Wget "https://github.com/!_RepoFullName:"=!/archive/!_RepoBranch:"=!.zip" -O "Zips\!_Github_ID!.zip" -q --tries=5 --show-progress --timeout=5
+	IF /I %_Silent%==False (
+		Wget "https://github.com/!_RepoFullName:"=!/archive/!_RepoBranch:"=!.zip" -O "Zips\!_Github_ID!.zip" -q --tries=5 --show-progress --timeout=5
+		) else (
+		Wget "https://github.com/!_RepoFullName:"=!/archive/!_RepoBranch:"=!.zip" -O "Zips\!_Github_ID!.zip" -q --tries=5 --timeout=5
+	)
 	) ELSE (
 	Echo. Already Installed...!
 	Echo. Do You want to ReDownlaod '!_RepoName:~1!' ?
@@ -501,21 +531,26 @@ REM Checking length of the Description...
 Call Getlen "!_RepoDes!"
 Set _Len=!Errorlevel!
 
+set _Silent=False
+IF /i "%_3%" == "/s" (set _Silent=True)
+
 If !_Len! GEQ 50 (Set _RepoDes=!_RepoDes:~0,50!...)
 
-Echo. --------------------------------------------------------------------
-Echo. Name:			!_RepoName:~1!
-Echo. Owner:			!_RepoOwner!
-Echo. Local-ID:		!_Index_Number!
-Echo. Github-ID:		!_RepoID!
-Echo. Created:		!_RepoInit:~1,10!
-Echo. Updated-On:		!_RepoUpdate:~1,10!
-Echo. Branch:		!_RepoBranch:"=!
-Echo. License:		!_RepoLicense:"=!
-Echo. Size:			!_RepoSize! KBs
-Echo. Description:		!_RepoDes!
-Echo. Link:			!_RepoLink:"=!
-Echo. --------------------------------------------------------------------
+IF %_Silent%==False (
+	Echo. --------------------------------------------------------------------
+	Echo. Name:			!_RepoName:~1!
+	Echo. Owner:			!_RepoOwner!
+	Echo. Local-ID:		!_Index_Number!
+	Echo. Github-ID:		!_RepoID!
+	Echo. Created:		!_RepoInit:~1,10!
+	Echo. Updated-On:		!_RepoUpdate:~1,10!
+	Echo. Branch:		!_RepoBranch:"=!
+	Echo. License:		!_RepoLicense:"=!
+	Echo. Size:			!_RepoSize! KBs
+	Echo. Description:		!_RepoDes!
+	Echo. Link:			!_RepoLink:"=!
+	Echo. --------------------------------------------------------------------
+)
 chcp %codepage% > nul
 If /i "%_1%" == "Detail" (Echo. INSTALL THIS WITH: "bat install !_Index_Number!")
 REM Echo @timeout /t 5 ^>nul >"%Temp%\effect1.bat"
@@ -726,7 +761,6 @@ SET %~1=!%~1:X=x!
 SET %~1=!%~1:Y=y!
 SET %~1=!%~1:Z=z!
 GOTO:EOF
-
 
 REM ============================================================================
 :End

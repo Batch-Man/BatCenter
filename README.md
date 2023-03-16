@@ -12,7 +12,9 @@ There is a script available that can directly download BatCenter from the main s
 
 ### Windows 10:
 Installation from command prompt:  
-```curl -L "https://raw.githubusercontent.com/Batch-Man/BatCenter/main/Install/batcenter_install.bat" --output "batcenter_install.bat" && "batcenter_install.bat" & del "batcenter_install.bat" /q /f > nul```
+```cmd
+curl -L "https://raw.githubusercontent.com/Batch-Man/BatCenter/main/Install/batcenter_install.bat" --output "batcenter_install.bat" && "batcenter_install.bat" & del "batcenter_install.bat" /q /f > nul
+```
 
 ### Other Windows versions:
 Download the installation script from the following link:

@@ -24,8 +24,17 @@ REM Script to install BatCenter by Kvc
 Echo. FETCHING FILES FROM SERVER...
 
 IF /I "%_Curl%" == "YES" (
-    Curl -L "https://github.com/Batch-Man/BatCenter/blob/main/Files/7za.exe?raw=true" --output "7za.exe" --progress-bar
-    Curl -L "https://github.com/Batch-Man/BatCenter/blob/main/Install/bat.7z?raw=true" --output "bat.7z" --progress-bar
+    IF /I "%~1"=="debug" (
+		Echo.
+		Echo Installing as DEBUG which not recommended.
+		Echo Try without "debug" argument
+		Echo.
+		Curl -L --ssl-no-revoke "https://github.com/GroophyLifefor/BatCenter/blob/main/Files/7za.exe?raw=true" --output "7za.exe" --progress-bar
+		Curl -L --ssl-no-revoke "https://github.com/GroophyLifefor/BatCenter/blob/main/Install/bat.7z?raw=true" --output "bat.7z" --progress-bar
+	) else (
+		Curl -L --ssl-no-revoke "https://github.com/Batch-Man/BatCenter/blob/main/Files/7za.exe?raw=true" --output "7za.exe" --progress-bar
+		Curl -L --ssl-no-revoke "https://github.com/Batch-Man/BatCenter/blob/main/Install/bat.7z?raw=true" --output "bat.7z" --progress-bar
+	)
     Goto :Extract
 )
 
