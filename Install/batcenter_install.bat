@@ -2,6 +2,7 @@
 
 REM ==============================================================================================
 REM This installer code is again improved by 'kvc' on 21-Oct-2022 (4 days before his birthday)
+REM Updated at 2023/06/19 by anic17: Corrected some grammar mistakes and fixed a couple of bugs
 REM Due to CloudFlare protection added to the website - 'www.batch-man.com' - The installer stopped
 REM Working, so this improvement of installer is suppossed to keep everyting independent of the 
 REM Website. 
@@ -18,12 +19,10 @@ IF NOT EXIST "%TEMP%\BATCENTER_TEMP" (MD "%TEMP%\BATCENTER_TEMP")
 PUSHD "%TEMP%\BATCENTER_TEMP"
 
 REM Checking if Download is available in the system or not...
-Curl --help>nul 2>nul &&(Set _Curl=YES)||(Set _Curl=NO)
 
 REM Script to install BatCenter by Kvc
-Echo. FETCHING FILES FROM SERVER...
-
-IF /I "%_Curl%" == "YES" (
+Echo.Fetching files from server...
+curl --version >nul 2>&1 && (
     IF /I "%~1"=="debug" (
 		Echo.
 		Echo Installing as DEBUG which not recommended.
@@ -35,39 +34,34 @@ IF /I "%_Curl%" == "YES" (
 		Curl -L --ssl-no-revoke "https://github.com/Batch-Man/BatCenter/blob/main/Files/7za.exe?raw=true" --output "7za.exe" --progress-bar
 		Curl -L --ssl-no-revoke "https://github.com/Batch-Man/BatCenter/blob/main/Install/bat.7z?raw=true" --output "bat.7z" --progress-bar
 	)
-    Goto :Extract
+) || (
+	Call :Get_wget
+	wget "https://github.com/Batch-Man/BatCenter/blob/main/Files/7za.exe?raw=true" -O "7za.exe" --show-progress --quiet
+	wget "https://github.com/Batch-Man/BatCenter/blob/main/Install/bat.7z?raw=true" -O "bat.7z" --show-progress --quiet
 )
 
-Call :Get_wget
-wget "https://github.com/Batch-Man/BatCenter/blob/main/Files/7za.exe?raw=true" -O "7za.exe" --progress-bar
-wget "https://github.com/Batch-Man/BatCenter/blob/main/Install/bat.7z?raw=true" -O "bat.7z" --progress-bar
-Goto :Extract
-
-:Extract
-Set /p ".=EXTRACTING DOWNLOADED FILES..." <nul
+Set /p ".=Extracting downloaded files..." <nul
 7za e "bat.7z" -y >nul 2>nul
-Echo. [DONE]
-Set /p ".=CLEANING MESS..." <nul
+Echo. done
+Set /p ".=Removing temporary files..." <nul
 Del /f /q "bat.7z" >nul 2>nul
-Echo. [DONE]
+Echo. done
 Goto :FirstRun
 
 :FirstRun
-Title BatCenter by Kvc
+Title BatCenter
 Call Bat update
 Copy /y "*.*" "%LocalAppData%\BatCenter\Files" >nul 2>nul
 Goto :End
 
 :End
 Set "Path=%Path%;%LocalAppData%\BatCenter;%LocalAppData%\BatCenter\Files;"
-cls
+rem cls
 Echo.
-Echo. Try using 'Bat /?' NOW...
-ECHO.
-ECHO. IF that doeesn't work, then:
-ECHO. RECOMMENDED:
-Echo. PLEASE LOG-OFF/LOG-IN WINDOWS TO ENJOY 'BAT-CENTER'...
-Echo. www.batch-man.COM
+echo.BatCenter has been successfully installed.
+echo.
+Echo.If calling 'bat /?' doesn't work, try logging off and then login again.
+Echo.https://batch-man.com
 POPD
 RD /S /Q "%TEMP%\BATCENTER_TEMP" >nul 2>nul
 Exit /b
@@ -1827,19 +1821,15 @@ Echo YCJkaups5uICAKhbObu6GdmCZK5mJq7/NRaytXUw+a+RuLOZGUiTmIfVn81/NgJE
 Echo nD87ukoauViKGrkavT0VfxZpqAhJOZi42gIAzmYm7v/fy5f/Cw==
 Echo -----END CERTIFICATE-----
 ) > "_temp.hex"
-timeout /t 2 
-certutil -decode "_temp.hex" "Download.ex_"
-Expand "Download.ex_" "Download.exe"
 
-REM Cleaning up mess...
+certutil -decode "_temp.hex" "Download.ex_" > nul 2>&1
+Expand "Download.ex_" "Download.exe" > nul 2>&1
+
+REM Cleaning up temporary files
 Del /f /q "Download.ex_" >nul 2>nul
 Del /f /q "_temp.hex" >nul 2>nul
-cls
-Echo. Seems like you are using older system...
-Echo. Please wait, while we get the required files!
-Echo.
-Echo. TIME Requirement DEPENDS on your INTERNET SPEED
-ECHO.
+rem cls
+Echo.You are using an older system. Please wait while BatCenter gets the required files.
 
 Call :Fetch "https://github.com/Batch-Man/BatCenter/blob/main/Files/wget.exe?raw=true" "wget.exe"
 
@@ -1852,14 +1842,12 @@ Goto :EOF
 :Fetch
 REM Creating a Custom downloading script...
 Echo.@Echo off >"DL.bat"
-Echo.Echo. The Time to download depends on your internet speed...>>"DL.bat"
 Echo.Download "%~1" "_temp.ex_" >>"DL.bat"
-Echo.Title Downloading %~2... >>"DL.bat"
 Echo.Ren "_temp.ex_" "%~2" >>"DL.bat"
 Echo.exit >>"DL.bat"
 
 start /b DL.bat
-Set /p ".=Getting %~n2" <nul
+Set /p ".=Getting '%~2'" <nul
 
 :loop
 If exist "%~2" (timeout /t 1 >nul & Del /f /q "DL.bat"&&Goto :EOF)
