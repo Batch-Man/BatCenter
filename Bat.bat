@@ -27,16 +27,18 @@ REM sources, you can search and see details about them before downloading
 REM for More Visit: www.batch-man.com
 REM OR
 REM https://github.com/Batch-Man/BatCenter
-REM 
 
 
 REM Setting version information...
-set _ver=20230706
+set _ver=20240104
 
 REM Checking for various parameters of the function...
-for %%A in ("--help" "/?" "-h" "-help" "/help" "") do if "%~1"=="%%~A" goto :help
-for %%A in ("--ver" "-v" "/v" "-ver" "/ver") do if "%~1"=="%%~A" (echo.%_ver%&goto :End)
-
+REM Read more about '?' can't be escaped in FOR loop, so - checking for it seperately... in line 40
+REM Source: https://superuser.com/questions/1576114/window-batch-escaping-special-characters-in-for-sentence 
+REM 
+If /i "!_1!" == "/?" (Goto :Help)
+for %%A in ("--help" "-h" "-help" "/help" "help" "") do (if /i "!_1!"=="%%~A" (goto :help))
+for %%A in ("--ver" "-v" "/v" "-ver" "/ver" "ver") do (if /i "!_1!"=="%%~A" (echo.!_ver!&goto :End))
 REM Saving parameters to variables...
 set _1=%~1
 set _2=%~2
@@ -69,20 +71,22 @@ for /l %%A in (1,1,9) do (
 	if /i "!_%%~A!" == "/y" (set _y=True&&Shift /%%~A)
 	)
 
-REM Resetting Vairables as per parameters...
-set _1=%~1
-set _2=%~2
-set _3=%~3
-set _4=%~4
-set _5=%~5
-set _6=%~6
-set _7=%~7
-set _8=%~8
-set _9=%~9
+REM Reading variables as per parameters...
+Set _varCount=0
+:varLoop
+If /i "%~1" == "" (Goto :exitVarLoop)
+Set /A _varCount+=1
+Set _!_varCount!=%~1
+REM Also checking for 'y' switch...
+If /i "%~1" == "-y" (Set _Silent=True && Set /A _varCount-=1)
+If /i "%~1" == "/y" (Set _Silent=True && Set /A _varCount-=1)
+Shift /1
+Goto :varLoop
 
+:exitVarLoop
 REM Acting as per the Passed parameters...
-set _Valid=0
-if /i "%_1%" == "reset" (if /I "%_2%" == "all" (call :ResetAll) else (call :Reset))
+set _Valid=False
+if /i "!_1!" == "reset" (if /I "!_2!" == "all" (Goto :ResetAll) else (Goto :Reset))
 
 for %%A in ("update" "ilist" "list" "search" "install" "uninstall" "detail") do (
 	if "!_1!"=="%%~A" (
@@ -109,24 +113,25 @@ goto :EOF
 echo Setting up BatCenter...
 del /F /q "FirstLaunch.txt" >nul 2>nul
 call :Update
-set _Found=
+set _Found=False
 
 REM Reading Path of Current User...
 for /f "skip=2 tokens=1,2,*" %%a in ('reg query HKCU\Environment /v path') do (set "_UserPath=%%c")
 
 REM Checking, if the Path already has path to Bat
 for /f "tokens=*" %%A in ('StrSplit ^; "!_UserPath!"') do (
-	if /i "%%~A" EQU "!_path!" set _Found=Found
+	if /i "%%~A" EQU "!_path!" (set _Found=True)
 )
-if not defined _Found (	
+if /i "!_Found!" == "False" (	
 	REM Adding BatCenter path to Environment variable...
 	reg add HKCU\Environment /v Path /d "!_path!\plugins;!_UserPath!;!_path!;!_path!\Files;" /f
 )
-call EnvUpdate.bat
 
 echo Setup completed successfully
 REM Updating the environment path, without restarting.... (Thanks @anic17)
-if /i "%_1%" == "Update" (goto :End)
+gpupdate /force
+call EnvUpdate.bat
+Call :update
 Goto :End
 
 :Reset
@@ -137,6 +142,8 @@ del /f /q "Json\*.*"
 del /f /q "Zips\*.*"
 del /f /q "Temp\*.*"
 call :update
+Echo. BatCenter is Reset to its Initial State...as a New Install!!
+Echo. All Installed plugins/tools are removed...
 goto :EOF
 
 :ResetAll
@@ -167,7 +174,6 @@ goto :EOF
 if not exist "Temp\_Plugins.installed" (
 	dir /b "Zips\*.zip" > "!Temp!\List.txt" 2>nul
 	if /i !Errorlevel! NEQ 0 (echo.No plugins installed && goto :EOF)
-
 	del /q /f "plugins\*.*" >nul 2>nul
 
 	REM Checking, if fixing of older batcenter SYSTEM is needed...
@@ -217,8 +223,8 @@ set _Count=0
 echo. ----------------------- Installed plugins ------------------------
 if exist "Temp\_Plugins.installed" (
 for /f "usebackQ tokens=*" %%A in ("Temp\_Plugins.installed") do (
-	call :GetLocalID %%~A _Index_Number
-	ReadLine "Index\name.index" !_Index_Number!
+	call :GetLocalID %%~A _Local_ID
+	ReadLine "Index\name.index" !_Local_ID!
 	set /A _Count+=1
 	)
 )
@@ -250,7 +256,7 @@ if /i "!_Error!" NEQ "T" (
 	)
 
 	if !_RCount! EQU 0 (
-		echo.Multiple results found for the install term.
+		echo.Multiple results found for the search term.
 		echo.Try running 'bat search [Term1] [Term2]'
 		goto :End
 	)
@@ -261,25 +267,14 @@ REM echo !_Index_Number!
 call :FetchDetails !_Index_Number!
 goto :End
 
-REM ============================================================================
+REM =============================[ INSTALL ]====================================
 :Install
 REM Looking for the Searched term and returning the Value in _Result variable.
 REM Saving the values of results in an array kind of structure...
 REM E.g: _Result[0], _Result[1] ...
 REM Where, _RCount contains the number of results and _Result is the array name
-if /i "%_2%" == "" (echo.Missing search term. See 'bat /?' && goto :End)
-set _Silent=False
-if /i "%_3%" == "/s" (set _Silent=True)
-setlocal ENABLEDELAYEDEXPANSION
-set _isAll=%_2%
-if /i "%_isAll%" == "all" (
-	call :Get_Max_Index _Max_Index
-	for /l %%x in (1, 1, !_Max_Index!) do (
-		call :FetchDetails %%x
-		call :Download %%x
-	)
-	goto :End
-)
+if /i "!_2!" == "" (echo.Missing search term. See 'bat /?' && goto :End)
+
 set _Index_Number=!_2!
 call :check_Number !_2! _Error
 if /i "!_Error!" NEQ "T" (
@@ -345,9 +340,9 @@ for /f "tokens=* delims=" %%A in ('dir /s /b "*.exe" "*.bat" "*.cmd" "*.com"') d
 )
 
 popd
-if /I "%_Silent%"=="False" (<nul set /p ".=Updating the plugin database... ")
+set /p ".=Updating the plugin database... "
 call :Install_Tracking "!_Index_Number!"
-if /I "%_Silent%"=="False" echo.done
+echo.done
 goto :End
 
 :Install_Tracking
@@ -431,13 +426,7 @@ if /I "!_Index_Number!" == "" (goto :EOF)
 call :GetGithubID !_Index_Number! _Github_ID
 
 REM Downloading the required Repository...
-if not exist "Zips\!_Github_ID!.zip" (
-	if /I %_Silent%==False (
-		Wget "https://github.com/!_RepoFullName:"=!/archive/!_RepoBranch:"=!.zip" -O "Zips\!_Github_ID!.zip" -q --tries=5 --show-progress --timeout=5
-		) else (
-		Wget "https://github.com/!_RepoFullName:"=!/archive/!_RepoBranch:"=!.zip" -O "Zips\!_Github_ID!.zip" -q --tries=5 --timeout=5
-	)
-	) else (
+if not exist "Zips\!_Github_ID!.zip" (Wget "https://github.com/!_RepoFullName:"=!/archive/!_RepoBranch:"=!.zip" -O "Zips\!_Github_ID!.zip" -q --tries=5 --show-progress --timeout=5) else (
 	echo. Already Installed...!
 	echo. Do You want to ReDownlaod '!_RepoName:~1!' ?
 	set _Temp=N
@@ -447,7 +436,7 @@ if not exist "Zips\!_Github_ID!.zip" (
 goto :EOF
 
 REM ============================================================================
-:GetIndexNumber
+:GetIndexNumber [_Repo_Name_String_With_Index] [_VariableName]
 for /f "tokens=1* delims=[" %%A in ("%~1") do for /f "tokens=1* delims=]" %%X in ("%%A") do (set "%~2=%%X")
 goto :EOF
 
@@ -465,13 +454,13 @@ for /f "tokens=*" %%A in ('ReadLine "Index\id.index" %~1') do (set "%~2=%%~A")
 goto :EOF
 
 REM ============================================================================
-:FetchDetails
+:FetchDetails [Local_ID]
 set _Index_Number=%~1
 if not defined _Index_Number (goto :EOF)
 
 REM Checking the max number of the plugins available
 call :Get_Max_Index _Max_Index
-if !_Index_Number! GTR !_Max_Index! echo.The specified index ^(!_Index_Number!^) is greater than the plugin count ^(!_Max_Index!^) && goto:EOF
+if !_Index_Number! GTR !_Max_Index! (echo.The specified index ^(!_Index_Number!^) is greater than the plugin count ^(!_Max_Index!^) && goto:EOF)
 for /f "tokens=2 delims=:" %%A in ('chcp') do set "codepage=%%A"
 chcp 65001 > nul
 
@@ -518,25 +507,23 @@ set _Silent=False
 if /i "%_3%" == "/s" (set _Silent=True)
 
 if !_Len! GEQ 50 (set _RepoDes=!_RepoDes:~0,50!...)
-if %_Silent%==False (
-	echo. --------------------------------------------------------------------
-	echo. Name:			!_RepoName:~1!
-	echo. Owner:			!_RepoOwner!
-	echo. Local-ID:		!_Index_Number!
-	echo. Github-ID:		!_RepoID!
-	echo. Created:		!_RepoInit:~1,10!
-	echo. Updated-On:		!_RepoUpdate:~1,10!
-	echo. Branch:		!_RepoBranch:"=!
-	echo. License:		!_RepoLicense:"=!
-	echo. Size:			!_RepoSize! KBs
-	echo. Description:		!_RepoDes!
-	echo. Link:			!_RepoLink:"=!
-	echo. --------------------------------------------------------------------
-)
-if /i "%_1%" == "Detail" (echo.Install it with: "bat install !_Index_Number!")
+echo. --------------------------------------------------------------------
+echo. Name:			!_RepoName:~1!
+echo. Owner:			!_RepoOwner!
+echo. Local-ID:		!_Index_Number!
+echo. Github-ID:		!_RepoID!
+echo. Created:		!_RepoInit:~1,10!
+echo. Updated-On:		!_RepoUpdate:~1,10!
+echo. Branch:		!_RepoBranch:"=!
+echo. License:		!_RepoLicense:"=!
+echo. Size:			!_RepoSize! KBs
+echo. Description:		!_RepoDes!
+echo. Link:			!_RepoLink:"=!
+echo. --------------------------------------------------------------------
+if /i "!_1!" == "Detail" (echo.Install it with: "bat install !_Index_Number!")
 goto :End
 
-REM ============================================================================
+REM ============================[ CHECK_NUMBER ]================================
 :check_Number
 set _Number=%~1
 for /L %%A in (0,1,9) do (if defined _Number (set _Number=!_Number:%%~A=!))
@@ -544,10 +531,10 @@ if not defined _Number (set %~2=T) else (set %~2=F)
 Exit /b
 
 
-REM ============================================================================
+REM ============================[ UPDATE ]======================================
 :Update
 call :CheckConnection _Error
-if %_Error% NEQ 0 (goto :End)
+if !_Error! NEQ 0 (goto :End)
 
 REM Checking for Limited API calls condition...
 if exist "Files\BlockUpdate.txt" (echo.Too many API requests. Please wait some time&&echo.Limiting API calls only 180 times/hour, So your IP will not get Blacklisted. && goto :End)
@@ -592,6 +579,7 @@ if !_online_ver! GTR !_ver! (
 
 REM Removing Older Index Files...
 del /f /q "Index\*.*" >nul 2>nul
+del /f /q "Files\hosts.txt" >nul 2>nul
 
 REM Need to check, if the Basic Json files are present...Otherwise, we'll update!
 if not exist "Files\hosts.txt" (Wget "https://raw.githubusercontent.com/Batch-Man/BatCenter/main/Install/hosts.txt" -O "Files\hosts.txt" -q --tries=5 --show-progress --timeout=5) else (if /i "%_2%" NEQ "" (find /i "%_2%" "Files\hosts.txt" >nul 2>nul && echo. Already in DB... || (echo.>>"Files\hosts.txt"&echo.%_2%>>"Files\hosts.txt")))
@@ -622,16 +610,15 @@ echo.!_Max_Index!>"files\_Max_Index.Count"
 
 echo.Database updated successfully.
 REM LIMITING ACCESS TO API ONLY 180 TIMES/H (Thanks to @anic17 for Idea to improve)
+set _TempTime=!Time:~0,-6!
+set _TempTime=!_TempTime::=!
+
 if not exist "Files\_APIAccessTime.txt" (
 	REM Recording the Time of Usage for UPDATE COMMAND with BATCenter
-	set _TempTime=!Time:~0,-6!
-	set _TempTime=!_TempTime::=!
 	echo.!_TempTime! > "Files\_APIAccessTime.txt"
 	echo 1 > "Files\_APIAccessCount.txt"
 	del /f /q "Files\BlockUpdate.txt" >nul 2>nul
 	) else (
-	set _TempTime=!Time:~0,-6!
-	set _TempTime=!_TempTime::=!
 	set /P _OldTime= < "Files\_APIAccessTime.txt"
 	set /A _TimeDifference=!_TempTime!-!_OldTime!
 	set _TimeDifference=!_TimeDifference:-=!
@@ -649,10 +636,57 @@ Exit /b 0
 REM ============================================================================
 :CheckConnection
 set /p ".=Checking internet connection..." <nul
-wget --server-response --spider --quiet "https://github.com" >nul 2>nul&& (echo. [OK]&&set "_Return=0") || (echo Failed to connect to the internet&&set "_Return=1")
-set %~1=%_Return%
-Exit /b %_Return%
+REM wget --server-response --spider --quiet "https://github.com" >nul 2>nul&& (echo. [OK]&&set "_Return=0") || (echo Failed to connect to the internet&&set "_Return=1")
+curl -s "www.github.com" >nul 2>nul&& (echo. [OK]&&set "_Return=0") || (echo Failed to connect to the internet&&set "_Return=1")
+If /i "%~1" NEQ "" (set %~1=!_Return!)
+Exit /b !_Return!
 
+:VerifyAndFixBatCenterFiles
+REM Verifying the Required folder tree for files...
+for %%A in ("Json" "plugins" "Files" "Index" "Zips" "Temp") do (if not exist "!_BatCenterPath!\%%~A" (md "!_BatCenterPath!\%%~A"))
+	
+if /i "!_1!" == "Update" (
+
+	REM Need to check, if the Basic Json files are present...Otherwise, we'll update!
+	if not exist "!_BatCenterPath!\Files\hosts.txt" (
+		echo.Getting hosts.txt file from the server...
+		REM Wget "https://raw.githubusercontent.com/Batch-Man/BatCenter/main/Install/hosts.txt" -O "!_BatCenterPath!\Files\hosts.txt" -q --tries=5 --show-progress --timeout=5
+		curl -o "!_BatCenterPath!\Files\hosts.txt" -# "https://raw.githubusercontent.com/Batch-Man/BatCenter/main/Install/hosts.txt"
+	)
+
+	REM Getting Json files of each host...
+	for /f "usebackq tokens=*" %%a in ("!_BatCenterPath!\Files\hosts.txt") do (
+	REM wget "https://api.github.com/users/%%a/repos?per_page=100000&page=1" -O "!_BatCenterPath!\Json\%%a.json" -q --tries=5 --show-progress --timeout=5
+	curl -# -L "https://api.github.com/users/%%a/repos?per_page=100000&page=1" -o "!_BatCenterPath!\Json\%%a.json" -s --max-time 5 --retry 5 --retry-delay 1
+
+	REM Indexing Details...
+	Del /f /q "!_BatCenterPath!\Index\*.index" 2>nul >nul
+	for %%A in ("name" "full_name" "default_branch" "license.name" "size" "description" "owner.login" "owner.avatar_url" "svn_url" "created_at" "updated_at" "id") do (type "!_BatCenterPath!\Json\%%a.json" | jq ".[] .%%~A" >> "!_BatCenterPath!\Index\%%~A.index")
+	)
+
+	REM Setting _Count to '0' (Preventing mixing-up of numbers after "Bat Update")
+	set _Count=0
+
+	REM Indexing the main name.json file...
+	del /f /q "!Temp!\Tmp.index" >nul 2>nul
+	for /f "usebackQ tokens=*" %%A in ("!_BatCenterPath!\Index\name.index") do (
+		set /A _Count+=1
+		set _Temp_Line=%%~A
+		if defined _Temp_Line (echo.[!_Count!] - !_Temp_Line:-= !>>"!Temp!\Tmp.index")
+		)
+
+	copy /y "!Temp!\Tmp.index" "Index\name.index" >nul 2>nul
+	REM Keeping an eye on the Max Number of Plugins available...
+	set _Max_Index=!_Count!
+	echo.!_Max_Index!>"!_BatCenterPath!\files\_Max_Index.Count"
+)
+
+if /i "!_1!" NEQ "Update" (
+for %%A in ("name" "full_name" "default_branch" "license.name" "size" "description" "owner.login" "owner.avatar_url" "svn_url" "created_at" "updated_at" "id") do (
+	if not exist "!_BatCenterPath!\Index\%%~A.index" (echo.Please run 'Bat Update' to finish the installation. &&goto :End)
+)
+)
+Goto :EOF
 
 REM ============================================================================
 :List
@@ -662,7 +696,7 @@ type "Index\name.index"
 goto :End
 
 REM ============================================================================
-:Search
+:Search [_ResultArrayName] [_ResultArrayMaxCount]
 set "_RCount=%~1"
 set "_Return=%~2"
 if /i "%_2%" == "" (echo.Missing search term. See 'bat /?'&& goto :End)
@@ -675,8 +709,8 @@ REM copy /y "Index\full_name.index" "%Temp%\tmp.index" >nul 2>nul
 copy /y "Index\name.index" "%Temp%\tmp.index" >nul 2>nul
 :SearchLoop
 if /i "!_%_Count%!" == "" (goto :SearchNext)
-Find /i "!_%_Count%!" "%Temp%\tmp.index" > "%Temp%\tmp2.index"
-copy /y "%Temp%\tmp2.index" "%Temp%\tmp.index" >nul 2>nul
+Find /i "!_%_Count%!" "!Temp!\tmp.index" > "!Temp!\tmp2.index"
+copy /y "!Temp1\tmp2.index" "!Temp!\tmp.index" >nul 2>nul
 set /A _Count+=1
 goto :SearchLoop
 
@@ -713,27 +747,30 @@ REM ============================================================================
 :Help
 @(
 echo.
-echo.BatCenter - Batch-Man plugin manager
+echo.BatCenter - A Package manager for your Scripts. 
+echo.Batch-Man's plugin manager
+echo.BatCenter helps you searching, downloading batch plugins/tools from the
+echo.selected trusted sources. You can add your own trusted sources too.
 echo.
-echo.BatCenter helps you searching, detailing and downloading batch plugins from the selected sources.
+echo. www.batch-man.com
 echo.
 echo.Syntax:
 echo.
-echo.bat update [GitHub User]
+echo.bat update [GITHUB USER]
 echo.bat list
 echo.bat ilist
 echo.bat search [Term1] [Term2] ...
 echo.bat install [Local ID ^| [Term1] [Term2] ...]
 echo.bat detail [Local ID ^| [Term1] [Term2] ...]
 echo.bat reset [all]
-echo.bat [help ^| /? ^| -h ^| -help]
+echo.bat [help ^| /? ^| -h ^| -help ^| --help ^| /help]
 echo.bat ver
 echo.
 echo.Where:
 echo.
 echo.ver			: Displays version of program
 echo.help			: Displays help for the program
-echo.update [user]		: Updates the database with given user's plugins
+echo.update				: Updates the database from Trusted hosts
 echo.list			: Lists all the plugins that can be installed
 echo.ilist			: Lists all the installed plugins
 echo.search			: Filters out plugins as per the given keywords
