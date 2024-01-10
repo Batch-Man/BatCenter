@@ -30,7 +30,7 @@ REM https://github.com/Batch-Man/BatCenter
 
 
 REM Setting version information...
-set _ver=20240113
+set _ver=20240114
 
 REM Checking for various parameters of the function...
 REM Read more about '?' can't be escaped in FOR loop, so - checking for it seperately... in line 40
@@ -111,7 +111,7 @@ echo Setting up BatCenter...
 
 @REM REM Adding BatCenter path to Environment variable...
 Echo. Added BATCENTER to PATH...
-Setx path "!path!;!_path!;!_path!\Files;!_path!\plugins;"
+Setx path "!Original_Path!;!_path!;!_path!\Files;!_path!\plugins;"
 @REM reg add HKCU\Environment /v Path /d "!path!;!_path!;!_path!\Files;!_path!\plugins;" /f
 
 echo Setup completed successfully
@@ -533,9 +533,9 @@ REM Comparing the versions...
 set _ver=!_ver:.=!
 set _online_ver=!_online_ver:.=!
 if !_online_ver! GTR !_ver! (
-	echo.--------------------------------------------------------------------------
+	echo.-------------------------------------------------------------------------------------------
     echo.A new version of BatCenter is available [Current: !_Temp_ver!, New: !_Temp_online_ver!]
-	echo.--------------------------------------------------------------------------
+	echo.-------------------------------------------------------------------------------------------
 	echo.
     wget "https://github.com/Batch-Man/BatCenter/archive/main.zip" -O "Zips\BatCenter.zip" -q --tries=5 --show-progress --timeout=5
     	REM Creating a separate batch-file, as script overwriting  itself can lead to malfunctioning...
@@ -552,7 +552,7 @@ if !_online_ver! GTR !_ver! (
     echo popd
 	echo del /f /q "!_path!\Zips\BatCenter.zip" 
 	echo echo.Done
-	echo pause
+	echo 
 	) >"!Temp!\UpdateBat.bat"
 	set _UpdateBat=True
 )
