@@ -1,9 +1,9 @@
 @echo off
 setlocal EnableDelayedExpansion
 
-set "_path=%LocalAppData%\BatCenter"
-set "Original_Path=%path%"
-if not exist "%_path%" (md "%_path%"&echo.First Launch >"%_path%\FirstLaunch.txt")
+set "_path=!LocalAppData!\BatCenter"
+set "Original_Path=!path!"
+if not exist "!_path!" (md "!_path!"&echo.First Launch >"!_path!\FirstLaunch.txt")
 
 REM THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY
 REM KIND, EXPRESS OR IMPLIED, INCLUDING BUT not LIMITED TO THE
@@ -30,15 +30,13 @@ REM https://github.com/Batch-Man/BatCenter
 
 
 REM Setting version information...
-set _ver=20240104
+set _ver=20240110
 
 REM Checking for various parameters of the function...
 REM Read more about '?' can't be escaped in FOR loop, so - checking for it seperately... in line 40
 REM Source: https://superuser.com/questions/1576114/window-batch-escaping-special-characters-in-for-sentence 
 REM 
-If /i "!_1!" == "/?" (Goto :Help)
-for %%A in ("--help" "-h" "-help" "/help" "help" "") do (if /i "!_1!"=="%%~A" (goto :help))
-for %%A in ("--ver" "-v" "/v" "-ver" "/ver" "ver") do (if /i "!_1!"=="%%~A" (echo.!_ver!&goto :End))
+
 REM Saving parameters to variables...
 set _1=%~1
 set _2=%~2
@@ -54,23 +52,22 @@ REM Starting Main Program...
 REM ============================================================================
 :Main
 
+REM Checking for the help menu...
+If /i "!_1!" == "/?" (Goto :Help)
+for %%A in ("--help" "-h" "-help" "/help" "help" "") do (if /i "!_1!"=="%%~A" (goto :help))
+for %%A in ("--ver" "-v" "/v" "-ver" "/ver" "ver") do (if /i "!_1!"=="%%~A" (echo.!_ver!&goto :End))
+
 REM Verifying the Required folder tree for files...
 for %%A in ("Json" "plugins" "Files" "Index" "Zips" "Temp") do if not exist "!_path!\%%~A" md "!_path!\%%~A"
-if /i "%_1%" NEQ "Update" (for %%A in ("name" "full_name" "default_branch" "license.name" "size" "description" "owner.login" "owner.avatar_url" "svn_url" "created_at" "updated_at" "id") do (if not exist "!_path!\Index\%%~A.index" (echo.Please run 'Bat Update' to finish the installation. &&goto :End)))
+if /i "!_1!" NEQ "Update" (for %%A in ("name" "full_name" "default_branch" "license.name" "size" "description" "owner.login" "owner.avatar_url" "svn_url" "created_at" "updated_at" "id") do (if not exist "!_path!\Index\%%~A.index" (echo.Please run 'Bat Update' to finish the installation. &&goto :End)))
 
 
-set "path=%path%;%_path%;%_path%\Files;%_path%\plugins;%cd%;%cd%\files"
-Pushd "%_path%"
+set "path=!path!;!_path!;!_path!\Files;!_path!\plugins;!cd!;!cd!\files"
+Pushd "!_path!"
 
 if exist "FirstLaunch.txt" (Goto :FirstLaunch)
 
 REM Checking if the '-y' is provided in parameters...
-set _y=
-for /l %%A in (1,1,9) do (
-	if /i "!_%%~A!" == "-y" (set _y=True&&Shift /%%~A)
-	if /i "!_%%~A!" == "/y" (set _y=True&&Shift /%%~A)
-	)
-
 REM Reading variables as per parameters...
 Set _varCount=0
 :varLoop
@@ -78,8 +75,8 @@ If /i "%~1" == "" (Goto :exitVarLoop)
 Set /A _varCount+=1
 Set _!_varCount!=%~1
 REM Also checking for 'y' switch...
-If /i "%~1" == "-y" (Set _Silent=True && Set /A _varCount-=1)
-If /i "%~1" == "/y" (Set _Silent=True && Set /A _varCount-=1)
+If /i "%~1" == "-y" (Set _y=True && Set /A _varCount-=1)
+If /i "%~1" == "/y" (Set _y=True && Set /A _varCount-=1)
 Shift /1
 Goto :varLoop
 
@@ -112,26 +109,26 @@ goto :EOF
 :FirstLaunch
 echo Setting up BatCenter...
 del /F /q "FirstLaunch.txt" >nul 2>nul
-call :Update
-set _Found=False
+set "_Found=False"
 
 REM Reading Path of Current User...
-for /f "skip=2 tokens=1,2,*" %%a in ('reg query HKCU\Environment /v path') do (set "_UserPath=%%c")
+set "_UserPath=%path%"
 
 REM Checking, if the Path already has path to Bat
 for /f "tokens=*" %%A in ('StrSplit ^; "!_UserPath!"') do (
-	if /i "%%~A" EQU "!_path!" (set _Found=True)
+	if /i "%%~A" EQU "!_path!" (set "_Found=True")
 )
 if /i "!_Found!" == "False" (	
-	REM Adding BatCenter path to Environment variable...
-	reg add HKCU\Environment /v Path /d "!_path!\plugins;!_UserPath!;!_path!;!_path!\Files;" /f
+	@REM REM Adding BatCenter path to Environment variable...
+	@REM reg add HKCU\Environment /v Path /d "!_path!\plugins;!_UserPath!;!_path!;!_path!\Files;" /f
+	Setx path "!path!;!_path!;!_path!\Files;!_path!\plugins;"
 )
 
 echo Setup completed successfully
 REM Updating the environment path, without restarting.... (Thanks @anic17)
 gpupdate /force
 call EnvUpdate.bat
-Call :update
+call :Update
 Goto :End
 
 :Reset
@@ -316,11 +313,9 @@ call :GetGithubID !_Index_Number! _Github_ID
 
 REM echo !_Index_Number!
 call :FetchDetails !_Index_Number!
-if /I "%_Silent%"=="False" echo.Starting download...
+echo.Starting download...
 call :Download !_Index_Number!
-if /I "%_Silent%"=="False" (
-	<nul set /p ".=Extracting plugin files to %_path%\Plugins... "
-)
+<nul set /p ".=Extracting plugin files to %_path%\Plugins... "
 
 pushd Plugins
 7za l "..\Zips\!_Github_ID!.zip" > nul 2>&1 && (echo.done) || (echo.failed)
@@ -361,7 +356,7 @@ REM Adding the ID of the Installed Plugin in INSTALLED PLUGINs list
 echo.!_Github_ID!>> "Temp\_Plugins.installed"
 
 for /f "tokens=*" %%A in ('ReadLine "Index\name.index" !_Index_Number!') do (
-	if %_Silent%==False (echo. REGISTERING Plugin... %%~A)
+	echo. REGISTERING Plugin... %%~A
 )
 
 REM As, Registering a plugin takes some time ... I want to show some progress alognside...
@@ -502,9 +497,6 @@ for /f "tokens=1,2* delims=-" %%A in ("!_RepoName!") do (set _RepoName=%%~B)
 REM Checking length of the Description...
 call Getlen "!_RepoDes!"
 set _Len=!Errorlevel!
-
-set _Silent=False
-if /i "%_3%" == "/s" (set _Silent=True)
 
 if !_Len! GEQ 50 (set _RepoDes=!_RepoDes:~0,50!...)
 echo. --------------------------------------------------------------------

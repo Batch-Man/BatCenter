@@ -1,6 +1,6 @@
 # BatCenter
 
-This utility will help you to search, download, install, view the batch plugins from selected sources, you can search and see details about them before downloading.
+This utility will help you to search, download, install, view the batch plugins/Command line tools/utilities from selected sources, you can search and see details about them before downloading. (You can also submit your own creations on www.batch-man.com)
 
 <center><a href="https://ibb.co/nbNBY4p"><img src="https://i.ibb.co/G0498Gm/image.png" alt="image" border="0"></a></center>
 
@@ -17,7 +17,7 @@ curl -L "https://raw.githubusercontent.com/Batch-Man/BatCenter/main/Install/batc
 ```
 
 ### Other Windows versions:
-Download the installation script from the following link:
+Download the installation script from the following link: (till win 8 and below)
 <a href="https://github.com/Batch-Man/BatCenter/releases/">Download Script</a>  
 
 ## Usage

@@ -4,13 +4,15 @@ REM ============================================================================
 REM This installer code is again improved by 'kvc' on 21-Oct-2022 (4 days before his birthday)
 REM Updated at 2023/06/19 by anic17: Corrected some grammar mistakes and fixed a couple of bugs
 REM Due to CloudFlare protection added to the website - 'www.batch-man.com' - The installer stopped
-REM Working, so this improvement of installer is suppossed to keep everyting independent of the 
+REM Working, so this improvement of installer is suppossed to keep everything independent of the 
 REM Website. 
 REM 
 REM Removed unnecessary utilities/tools and made the installation process faster than before.
 REM this installer should support even Windows XP from now On.
 REM 
 REM Enjoy BatCenter in whole windows family (from XP to 11 and hopefully so on...)
+REM 
+REM Update: 05 January 2024 (by Kvc)
 REM
 REM ==============================================================================================
 
@@ -18,23 +20,12 @@ REM Going to TEMP Dir to avoiding creating mess in current folder...
 IF NOT EXIST "%TEMP%\BATCENTER_TEMP" (MD "%TEMP%\BATCENTER_TEMP")
 PUSHD "%TEMP%\BATCENTER_TEMP"
 
-REM Checking if Download is available in the system or not...
-
 REM Script to install BatCenter by Kvc
 Echo.Fetching files from server...
-curl --version >nul 2>&1 && (
-    IF /I "%~1"=="debug" (
-		Echo.
-		Echo Installing as DEBUG which not recommended.
-		Echo Try without "debug" argument
-		Echo.
-		Curl -L --ssl-no-revoke "https://github.com/GroophyLifefor/BatCenter/blob/main/Files/7za.exe?raw=true" --output "7za.exe" --progress-bar
-		Curl -L --ssl-no-revoke "https://github.com/GroophyLifefor/BatCenter/blob/main/Install/bat.7z?raw=true" --output "bat.7z" --progress-bar
-	) else (
-		Curl -L --ssl-no-revoke "https://github.com/Batch-Man/BatCenter/blob/main/Files/7za.exe?raw=true" --output "7za.exe" --progress-bar
-		Curl -L --ssl-no-revoke "https://github.com/Batch-Man/BatCenter/blob/main/Install/bat.7z?raw=true" --output "bat.7z" --progress-bar
-	)
-) || (
+where curl 2>nul >nul && (
+	Curl -L --ssl-no-revoke "https://github.com/Batch-Man/BatCenter/blob/main/Files/7za.exe?raw=true" --output "7za.exe" --progress-bar
+	Curl -L --ssl-no-revoke "https://github.com/Batch-Man/BatCenter/blob/main/Install/bat.7z?raw=true" --output "bat.7z" --progress-bar
+	) || (
 	Call :Get_wget
 	wget "https://github.com/Batch-Man/BatCenter/blob/main/Files/7za.exe?raw=true" -O "7za.exe" --show-progress --quiet
 	wget "https://github.com/Batch-Man/BatCenter/blob/main/Install/bat.7z?raw=true" -O "bat.7z" --show-progress --quiet
