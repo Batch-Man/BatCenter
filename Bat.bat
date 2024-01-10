@@ -111,7 +111,8 @@ echo Setting up BatCenter...
 
 @REM REM Adding BatCenter path to Environment variable...
 Echo. Added BATCENTER to PATH...
-Setx path "!Original_Path!;!_path!;!_path!\Files;!_path!\plugins;"
+for /f "skip=2 tokens=1,2,*" %%A in ('reg query HKCU\Environment /v Path') do (Set "_UserPath=%%C")
+Setx path "!_UserPath!;!_path!;!_path!\Files;!_path!\plugins;"
 @REM reg add HKCU\Environment /v Path /d "!path!;!_path!;!_path!\Files;!_path!\plugins;" /f
 
 echo Setup completed successfully
