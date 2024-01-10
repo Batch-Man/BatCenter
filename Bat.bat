@@ -30,7 +30,7 @@ REM https://github.com/Batch-Man/BatCenter
 
 
 REM Setting version information...
-set _ver=20240111
+set _ver=20240112
 
 REM Checking for various parameters of the function...
 REM Read more about '?' can't be escaped in FOR loop, so - checking for it seperately... in line 40
@@ -66,7 +66,7 @@ set "path=!path!;!_path!;!_path!\Files;!_path!\plugins;!cd!;!cd!\files"
 Pushd "!_path!"
 
 REM Checking, if the Path already has path to Bat
-echo.!path! | find /i "batcenter" >nul 2>nul || (Call :FirstLaunch)
+for /f "skip=2 tokens=1,2,*" %%A in ('reg query HKCU\Environment /v Path') do (echo.%%C | find /i "batcenter" >nul 2>nul || (Call :FirstLaunch))
 
 REM Checking if the '-y' is provided in parameters...
 REM Reading variables as per parameters...
@@ -138,7 +138,8 @@ REM Removing BatCenter from Path...
 set _NewPath=
 
 REM Checking, if the Path already has path to BatCenter...
-echo !path! | find /i "batcenter" >nul 2>nul && (
+for /f "skip=2 tokens=1,2,*" %%A in ('reg query HKCU\Environment /v Path') do (Set "_UserPath=%%C")
+echo !_UserPath! | find /i "batcenter" >nul 2>nul && (
 
 	REM Thanks Bing-AI for the following trick so i can eliminate the use of dedicated
 	REM dependenacy only for this task... (removed strsplit.exe)
