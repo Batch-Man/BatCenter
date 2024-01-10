@@ -3,7 +3,7 @@ setlocal EnableDelayedExpansion
 
 set "_path=!LocalAppData!\BatCenter"
 set "Original_Path=!path!"
-if not exist "!_path!" (md "!_path!"&echo.First Launch >"!_path!\FirstLaunch.txt")
+if not exist "!_path!" (md "!_path!")
 
 REM THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY
 REM KIND, EXPRESS OR IMPLIED, INCLUDING BUT not LIMITED TO THE
@@ -30,7 +30,7 @@ REM https://github.com/Batch-Man/BatCenter
 
 
 REM Setting version information...
-set _ver=20240110
+set _ver=20240111
 
 REM Checking for various parameters of the function...
 REM Read more about '?' can't be escaped in FOR loop, so - checking for it seperately... in line 40
@@ -65,7 +65,8 @@ if /i "!_1!" NEQ "Update" (for %%A in ("name" "full_name" "default_branch" "lice
 set "path=!path!;!_path!;!_path!\Files;!_path!\plugins;!cd!;!cd!\files"
 Pushd "!_path!"
 
-if exist "FirstLaunch.txt" (Goto :FirstLaunch)
+REM Checking, if the Path already has path to Bat
+echo.!path! | find /i "batcenter" >nul 2>nul || (Call :FirstLaunch)
 
 REM Checking if the '-y' is provided in parameters...
 REM Reading variables as per parameters...
@@ -88,10 +89,10 @@ if /i "!_1!" == "reset" (if /I "!_2!" == "all" (Goto :ResetAll) else (Goto :Rese
 for %%A in ("update" "ilist" "list" "search" "install" "uninstall" "detail") do (
 	if "!_1!"=="%%~A" (
 		call :%%~A
-		set _Valid=1
+		set _Valid=True
 	)
 )
-if %_Valid% equ 0 (echo.Invalid parameter. Type 'bat /?' for help.)
+if /i "!_Valid!" == "False" (echo.Invalid parameter. Type 'bat /?' for help.)
 goto :End
 
 REM ============================================================================
@@ -108,28 +109,17 @@ goto :EOF
 
 :FirstLaunch
 echo Setting up BatCenter...
-del /F /q "FirstLaunch.txt" >nul 2>nul
-set "_Found=False"
 
-REM Reading Path of Current User...
-set "_UserPath=%path%"
-
-REM Checking, if the Path already has path to Bat
-for /f "tokens=*" %%A in ('StrSplit ^; "!_UserPath!"') do (
-	if /i "%%~A" EQU "!_path!" (set "_Found=True")
-)
-if /i "!_Found!" == "False" (	
-	@REM REM Adding BatCenter path to Environment variable...
-	@REM reg add HKCU\Environment /v Path /d "!_path!\plugins;!_UserPath!;!_path!;!_path!\Files;" /f
-	Setx path "!path!;!_path!;!_path!\Files;!_path!\plugins;"
-)
+@REM REM Adding BatCenter path to Environment variable...
+Echo. Added BATCENTER to PATH...
+Setx path "!path!;!_path!;!_path!\Files;!_path!\plugins;"
+reg add HKCU\Environment /v Path /d "!path!;!_path!;!_path!\Files;!_path!\plugins;" /f
 
 echo Setup completed successfully
 REM Updating the environment path, without restarting.... (Thanks @anic17)
 gpupdate /force
 call EnvUpdate.bat
-call :Update
-Goto :End
+Goto :EOF
 
 :Reset
 del /f /q "Files\hosts.txt" 
@@ -145,23 +135,21 @@ goto :EOF
 
 :ResetAll
 REM Removing BatCenter from Path...
-call Getlen "!_path!"
-set _len=!Errorlevel!
 set _NewPath=
-REM Reading Path of Current User...
-for /f "skip=2 tokens=1,2,*" %%a in ('reg query HKCU\Environment /v path') do (set "_UserPath=%%c")
 
-REM Checking, if the Path already has path to Bat
-for /f "tokens=*" %%A in ('StrSplit ^; "!_UserPath!"') do (
-	REM echo.%%A
-	for %%a in (!_len!) do (
-		set "_Temp=%%~A"
-		if /i "!_Temp:~0,%%~a!" NEQ "!_path!" (set "_NewPath=!_NewPath!!_Temp!;")
-		)
-	)
-set /p ".=Removing BatCenter from path... " <nul
-REM Removing BatCenter path from Environment variable...
-reg add HKCU\Environment /v Path /d "!_NewPath!" /f 2>nul >nul
+REM Checking, if the Path already has path to BatCenter...
+echo !path! | find /i "batcenter" >nul 2>nul && (
+
+	REM Thanks Bing-AI for the following trick so i can eliminate the use of dedicated
+	REM dependenacy only for this task... (removed strsplit.exe)
+	for %%a in ("!path:;=";"!") do (echo.%%~A | find /i "batcenter" || (set "_NewPath=!_NewPath!%%~A;"))
+	
+	set /p ".=Removing BatCenter from path... " <nul
+	REM Removing BatCenter path from Environment variable...
+	reg add HKCU\Environment /v Path /d "!_NewPath!" /f 2>nul >nul
+	Setx path "!_NewPath!"
+)
+
 rd /s /q "!_path!" 2>nul 2>&1 >nul 
 echo.done
 Exit /b
