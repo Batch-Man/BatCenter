@@ -30,7 +30,7 @@ REM https://github.com/Batch-Man/BatCenter
 
 
 REM Setting version information...
-set _ver=20240112
+set _ver=20240113
 
 REM Checking for various parameters of the function...
 REM Read more about '?' can't be escaped in FOR loop, so - checking for it seperately... in line 40
@@ -61,12 +61,11 @@ REM Verifying the Required folder tree for files...
 for %%A in ("Json" "plugins" "Files" "Index" "Zips" "Temp") do if not exist "!_path!\%%~A" md "!_path!\%%~A"
 if /i "!_1!" NEQ "Update" (for %%A in ("name" "full_name" "default_branch" "license.name" "size" "description" "owner.login" "owner.avatar_url" "svn_url" "created_at" "updated_at" "id") do (if not exist "!_path!\Index\%%~A.index" (echo.Please run 'Bat Update' to finish the installation. &&goto :End)))
 
+REM Checking, if the Path already has path to Bat
+for /f "skip=2 tokens=1,2,*" %%A in ('reg query HKCU\Environment /v Path') do (echo.%%C | find /i "batcenter" >nul 2>nul || (Call :FirstLaunch))
 
 set "path=!path!;!_path!;!_path!\Files;!_path!\plugins;!cd!;!cd!\files"
 Pushd "!_path!"
-
-REM Checking, if the Path already has path to Bat
-for /f "skip=2 tokens=1,2,*" %%A in ('reg query HKCU\Environment /v Path') do (echo.%%C | find /i "batcenter" >nul 2>nul || (Call :FirstLaunch))
 
 REM Checking if the '-y' is provided in parameters...
 REM Reading variables as per parameters...
@@ -113,7 +112,7 @@ echo Setting up BatCenter...
 @REM REM Adding BatCenter path to Environment variable...
 Echo. Added BATCENTER to PATH...
 Setx path "!path!;!_path!;!_path!\Files;!_path!\plugins;"
-reg add HKCU\Environment /v Path /d "!path!;!_path!;!_path!\Files;!_path!\plugins;" /f
+@REM reg add HKCU\Environment /v Path /d "!path!;!_path!;!_path!\Files;!_path!\plugins;" /f
 
 echo Setup completed successfully
 REM Updating the environment path, without restarting.... (Thanks @anic17)
@@ -147,7 +146,7 @@ echo !_UserPath! | find /i "batcenter" >nul 2>nul && (
 	
 	set /p ".=Removing BatCenter from path... " <nul
 	REM Removing BatCenter path from Environment variable...
-	reg add HKCU\Environment /v Path /d "!_NewPath!" /f 2>nul >nul
+	@REM reg add HKCU\Environment /v Path /d "!_NewPath!" /f 2>nul >nul
 	Setx path "!_NewPath!"
 )
 
