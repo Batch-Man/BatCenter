@@ -134,13 +134,12 @@ echo !_UserPath! | find /i "batcenter" >nul 2>nul && (
 
 	REM Thanks Bing-AI for the following trick so i can eliminate the use of dedicated
 	REM dependenacy only for this task... (removed strsplit.exe)
-	for %%A in ("!path:;=";"!") do (echo.%%~A | find /i "batcenter" || (set "_NewPath=!_NewPath!%%~A;"))
+	for %%A in ("!_UserPath:;=";"!") do (echo.%%~A | find /i "batcenter" || (set "_NewPath=!_NewPath!%%~A;"))
 	
 	set /p ".=Removing BatCenter from path... " <nul
 	REM Removing BatCenter path from Environment variable...
 	@REM reg add HKCU\Environment /v Path /d "!_NewPath!" /f 2>nul >nul
 	setx path "!_NewPath!"
-	setx batcenter ""
 )
 cd /
 rd /s /q "!_BatCenter!" 2>nul 2>&1 >nul 
