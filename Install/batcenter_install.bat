@@ -45,27 +45,29 @@ Copy /y "*.*" "%LocalAppData%\BatCenter\Files" >nul 2>nul
 
 PUSHD "%LocalAppData%\BatCenter\Files"
 
-:FirstLaunch
+set "_batcenterExists=True"
 REM Checking, if the Path already has BatCenter
-for /f "skip=2 tokens=1,2,*" %%A in ('reg query HKCU\Environment /v Path') do (echo.%%C | find /i "batcenter" >nul 2>nul || (Call :FirstLaunch))
+for /f "skip=2 tokens=1,2,*" %%A in ('reg query HKCU\Environment /v Path') do (echo.%%C | find /i "batcenter" >nul 2>nul || (Set "_batcenterExists=False"))
 
-Set _UserPath=
-echo Setting up BatCenter...
-rem Reading the current path variable value...
-for /f "skip=2 tokens=1,2,*" %%A in ('reg query HKCU\Environment /v Path') do (Set "_UserPath=%%C")
-
-@REM REM Adding BatCenter path to Environment variable...
-Echo Adding BATCENTER to PATH...
-rem adding environmental variable to be used later... and to keep length of Path variable limited...
-Echo creating environmental variable... 'batcenter'...
-Setx batcenter "%localappdata%\BatCenter"
-
-Setx path "!_UserPath!;!_BatCenter!\Files;!_BatCenter!\plugins;"
-@REM reg add HKCU\Environment /v Path /d "!path!;!_BatCenter!;!_BatCenter!\Files;!_BatCenter!\plugins;" /f
-
-echo Setup completed successfully
-REM Updating the environment path, without restarting.... (Thanks @anic17)
-gpupdate /force
+if /i "%_batcenterExists%" NEQ "True" (
+    Set _UserPath=
+    echo Setting up BatCenter...
+    rem Reading the current path variable value...
+    for /f "skip=2 tokens=1,2,*" %%A in ('reg query HKCU\Environment /v Path') do (Set "_UserPath=%%C")
+    
+    @REM REM Adding BatCenter path to Environment variable...
+    Echo Adding BATCENTER to PATH...
+    rem adding environmental variable to be used later... and to keep length of Path variable limited...
+    Echo creating environmental variable... 'batcenter'...
+    Setx batcenter "%localappdata%\BatCenter"
+    
+    Setx path "!_UserPath!;!_BatCenter!\Files;!_BatCenter!\plugins;"
+    @REM reg add HKCU\Environment /v Path /d "!path!;!_BatCenter!;!_BatCenter!\Files;!_BatCenter!\plugins;" /f
+    
+    echo Setup completed successfully
+    REM Updating the environment path, without restarting.... (Thanks @anic17)
+    gpupdate /force
+)
 Call Bat update
 timeout /t 3
 call EnvUpdate.bat
