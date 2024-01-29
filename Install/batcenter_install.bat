@@ -19,6 +19,7 @@ REM ============================================================================
 REM Going to TEMP Dir to avoiding creating mess in current folder...
 IF NOT EXIST "%TEMP%\BATCENTER_TEMP" (MD "%TEMP%\BATCENTER_TEMP")
 PUSHD "%TEMP%\BATCENTER_TEMP"
+set "_BatCenter=%LocalAppData%\BatCenter"
 
 REM Script to install BatCenter by Kvc
 Echo.Fetching files from server...
@@ -61,7 +62,7 @@ if /i "%_batcenterExists%" NEQ "True" (
     Echo creating environmental variable... 'batcenter'...
     Setx batcenter "%localappdata%\BatCenter"
     
-    Setx path "!_UserPath!;!_BatCenter!\Files;!_BatCenter!\plugins;"
+    Setx path "%_UserPath%;%_BatCenter%\Files;%_BatCenter%\plugins;"
     @REM reg add HKCU\Environment /v Path /d "!path!;!_BatCenter!;!_BatCenter!\Files;!_BatCenter!\plugins;" /f
     
     echo Setup completed successfully

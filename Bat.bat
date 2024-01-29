@@ -134,7 +134,7 @@ echo !_UserPath! | find /i "batcenter" >nul 2>nul && (
 
 	REM Thanks Bing-AI for the following trick so i can eliminate the use of dedicated
 	REM dependenacy only for this task... (removed strsplit.exe)
-	for %%a in ("!path:;=";"!") do (echo.%%~A | find /i "batcenter" || (set "_NewPath=!_NewPath!%%~A;"))
+	for %%A in ("!path:;=";"!") do (echo.%%~A | find /i "batcenter" || (set "_NewPath=!_NewPath!%%~A;"))
 	
 	set /p ".=Removing BatCenter from path... " <nul
 	REM Removing BatCenter path from Environment variable...
@@ -540,7 +540,6 @@ if !_online_ver! GTR !_ver! (
 	echo @echo off
 	echo setlocal EnableDelayedExpansion
     echo title Updating BatCenter...
-    echo cls
     echo echo.Extracting files...
     echo pushd "!_BatCenter!\files"
     echo 7za e -y "!_BatCenter!\Zips\BatCenter.zip"
