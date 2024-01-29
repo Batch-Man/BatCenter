@@ -33,7 +33,7 @@ REM https://github.com/Batch-Man/BatCenter
 
 
 REM Setting version information...
-set _ver=20240129
+set _ver=20240130
 
 REM Starting Main Program...
 REM ============================================================================
@@ -45,9 +45,6 @@ REM Source: https://superuser.com/questions/1576114/window-batch-escaping-specia
 If /i "%~1" == "/?" (Goto :Help)
 for %%A in ("" "--help" "-h" "-help" "/help" "help") do (if /i "%~1"=="%%~A" (goto :help))
 for %%A in ("--ver" "-v" "/v" "-ver" "/ver" "ver") do (if /i "%~1"=="%%~A" (echo.!_ver!&goto :End))
-
-REM Checking, if the Path already has path to BatCenter
-for /f "skip=2 tokens=1,2,*" %%A in ('reg query HKCU\Environment /v Path') do (echo.%%C | find /i "batcenter" >nul 2>nul || (Call :FirstLaunch))
 
 REM Verifying the Required folder tree for files...
 Call :VerifyAndFixBatCenterFiles
@@ -95,6 +92,8 @@ echo.This feature will come soon.
 goto :EOF
 
 :FirstLaunch
+Set _UserPath=
+
 echo Setting up BatCenter...
 rem Reading the current path variable value...
 for /f "skip=2 tokens=1,2,*" %%A in ('reg query HKCU\Environment /v Path') do (Set "_UserPath=%%C")
@@ -103,9 +102,9 @@ for /f "skip=2 tokens=1,2,*" %%A in ('reg query HKCU\Environment /v Path') do (S
 Echo Adding BATCENTER to PATH...
 rem adding environmental variable to be used later... and to keep length of Path variable limited...
 Echo creating environmental variable... 'batcenter'...
-Setx batcenter "%%localappdata%%\BatCenter"
+Setx batcenter "%localappdata%\BatCenter"
 
-Setx path "!_UserPath!%%batcenter%%\Files;%%batcenter%%\plugins;"
+Setx path "!_UserPath!!_BatCenter!\Files;!_BatCenter!\plugins;"
 @REM reg add HKCU\Environment /v Path /d "!path!;!_BatCenter!;!_BatCenter!\Files;!_BatCenter!\plugins;" /f
 
 echo Setup completed successfully
@@ -140,9 +139,10 @@ echo !_UserPath! | find /i "batcenter" >nul 2>nul && (
 	set /p ".=Removing BatCenter from path... " <nul
 	REM Removing BatCenter path from Environment variable...
 	@REM reg add HKCU\Environment /v Path /d "!_NewPath!" /f 2>nul >nul
-	Setx path "!_NewPath!"
+	setx path "!_NewPath!"
+	setx batcenter ""
 )
-
+cd /
 rd /s /q "!_BatCenter!" 2>nul 2>&1 >nul 
 echo.done
 Exit /b
@@ -507,6 +507,9 @@ Exit /b
 
 REM ============================[ UPDATE ]======================================
 :Update
+REM Checking, if the Path already has path to BatCenter
+for /f "skip=2 tokens=1,2,*" %%A in ('reg query HKCU\Environment /v Path') do (echo.%%C | find /i "batcenter" >nul 2>nul || (Call :FirstLaunch))
+
 call :CheckConnection _Error
 if !_Error! NEQ 0 (goto :End)
 
@@ -742,7 +745,6 @@ echo.7za.exe 			by 7z
 echo.jq.exe 				by stedolan 
 echo.Getlen.bat			by Kvc
 echo.ReadLine.exe			by Kvc ^& anic17
-echo.StrSplit.exe			by Kvc
 echo.wget.exe			by Hrvoje
 echo.
 echo.                               Authors:

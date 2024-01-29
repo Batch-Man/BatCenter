@@ -31,27 +31,55 @@ where curl 2>nul >nul && (
 	wget "https://github.com/Batch-Man/BatCenter/blob/main/Install/bat.7z?raw=true" -O "bat.7z" --show-progress --quiet
 )
 
+rem extracting the downloaded files in the local system...
 Set /p ".=Extracting downloaded files..." <nul
 7za e "bat.7z" -y >nul 2>nul
 Echo. done
 Set /p ".=Removing temporary files..." <nul
 Del /f /q "bat.7z" >nul 2>nul
 Echo. done
-Goto :FirstRun
 
-:FirstRun
 Title BatCenter
-Call Bat update
+IF NOT EXIST "%LocalAppData%\BatCenter\Files" (MD "%LocalAppData%\BatCenter\Files")
 Copy /y "*.*" "%LocalAppData%\BatCenter\Files" >nul 2>nul
-Goto :End
 
-:End
-Set "Path=%Path%;%LocalAppData%\BatCenter;%LocalAppData%\BatCenter\Files;"
-rem cls
+PUSHD "%LocalAppData%\BatCenter\Files"
+
+:FirstLaunch
+REM Checking, if the Path already has BatCenter
+for /f "skip=2 tokens=1,2,*" %%A in ('reg query HKCU\Environment /v Path') do (echo.%%C | find /i "batcenter" >nul 2>nul || (Call :FirstLaunch))
+
+Set _UserPath=
+echo Setting up BatCenter...
+rem Reading the current path variable value...
+for /f "skip=2 tokens=1,2,*" %%A in ('reg query HKCU\Environment /v Path') do (Set "_UserPath=%%C")
+
+@REM REM Adding BatCenter path to Environment variable...
+Echo Adding BATCENTER to PATH...
+rem adding environmental variable to be used later... and to keep length of Path variable limited...
+Echo creating environmental variable... 'batcenter'...
+Setx batcenter "%localappdata%\BatCenter"
+
+Setx path "!_UserPath!;!_BatCenter!\Files;!_BatCenter!\plugins;"
+@REM reg add HKCU\Environment /v Path /d "!path!;!_BatCenter!;!_BatCenter!\Files;!_BatCenter!\plugins;" /f
+
+echo Setup completed successfully
+REM Updating the environment path, without restarting.... (Thanks @anic17)
+gpupdate /force
+Call Bat update
+timeout /t 3
+call EnvUpdate.bat
+POPD
+
+Set "Path=%Path%;%LocalAppData%\BatCenter\Files;"
 Echo.
 echo.BatCenter has been successfully installed.
 echo.
 Echo.If calling 'bat /?' doesn't work, try logging off and then login again.
+echo.
+echo.To report any ERROR, or give suggestions... please contact me @:
+echo.https://github.com/Batch-Man/BatCenter/issues
+echo.
 Echo.https://batch-man.com
 POPD
 RD /S /Q "%TEMP%\BATCENTER_TEMP" >nul 2>nul
@@ -1822,7 +1850,10 @@ Del /f /q "_temp.hex" >nul 2>nul
 rem cls
 Echo.You are using an older system. Please wait while BatCenter gets the required files.
 
-Call :Fetch "https://github.com/Batch-Man/BatCenter/blob/main/Files/wget.exe?raw=true" "wget.exe"
+Call :Fetch "https://github.com/Batch-Man/BatCenter/blob/main/Files/wget.exe?raw=true" "wget.exe" 3400
+
+rem just for testing, if the downlaod system works with progress showing...
+rem Call :Fetch "http://212.183.159.230/50MB.zip" "wget.exe" 51200
 
 REM Cleaning Mess
 Del /f /q "Download.exe" 2>&1 >nul
@@ -1830,7 +1861,11 @@ Del /f /q "Download.exe" 2>&1 >nul
 Goto :EOF
 
 
-:Fetch
+:Fetch [%1 = Link to donwload] [%2 = filename after downloading] [%3 = Estimate Actual Size in KB / for showing Progress...]
+rem taken from kvc's vt100 batch library for making things easier...
+SET _CurSavePos=[s
+SET _CurRestorePos=[u
+
 REM Creating a Custom downloading script...
 Echo.@Echo off >"DL.bat"
 Echo.Download "%~1" "_temp.ex_" >>"DL.bat"
@@ -1838,11 +1873,20 @@ Echo.Ren "_temp.ex_" "%~2" >>"DL.bat"
 Echo.exit >>"DL.bat"
 
 start /b DL.bat
-Set /p ".=Getting '%~2'" <nul
+set /p ".=Getting '%~2'... %_CurSavePos%" <nul
+set _fileSize=0
 
 :loop
-If exist "%~2" (timeout /t 1 >nul & Del /f /q "DL.bat"&&Goto :EOF)
-Set /p ".=." <nul
-timeout /t 1 /nobreak >nul
-Goto :loop
+If not exist "%~2" (
+    For /f %%A in ("_temp.ex_") do (set /A "_fileSize=%%~zA / 1024")
+	 set /a "_percentage=(%_fileSize% * 100) / %~3" 
+    Set /p ".=%_CurRestorePos% %_fileSize% / %~3 KB [%_percentage%%%]" <nul
+    rem timeout /t 1 /nobreak >nul
+	 Goto :loop
+    )
+
+Set /p ".=%_CurRestorePos% %~3 / %~3 KB [100%%]" <nul
+
+timeout /t 1 >nul
+Del /f /q "DL.bat"
 Goto :EOF
