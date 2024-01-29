@@ -1,9 +1,12 @@
 @echo off
 setlocal EnableDelayedExpansion
 
-set "_path=!LocalAppData!\BatCenter"
+set "_BatCenter=!LocalAppData!\BatCenter"
 set "Original_Path=!path!"
-if not exist "!_path!" (md "!_path!")
+if not exist "!_BatCenter!" (md "!_BatCenter!")
+set _FolderStructure="Json" "plugins" "Files" "Index" "Zips" "Temp"
+set _IndexFiles="name" "full_name" "default_branch" "license.name" "size" "description" "owner.login" "owner.avatar_url" "svn_url" "created_at" "updated_at" "id"
+set _commands="update" "ilist" "list" "search" "install" "uninstall" "detail"
 
 REM THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY
 REM KIND, EXPRESS OR IMPLIED, INCLUDING BUT not LIMITED TO THE
@@ -30,42 +33,27 @@ REM https://github.com/Batch-Man/BatCenter
 
 
 REM Setting version information...
-set _ver=20240114
-
-REM Checking for various parameters of the function...
-REM Read more about '?' can't be escaped in FOR loop, so - checking for it seperately... in line 40
-REM Source: https://superuser.com/questions/1576114/window-batch-escaping-special-characters-in-for-sentence 
-REM 
-
-REM Saving parameters to variables...
-set _1=%~1
-set _2=%~2
-set _3=%~3
-set _4=%~4
-set _5=%~5
-set _6=%~6
-set _7=%~7
-set _8=%~8
-set _9=%~9
+set _ver=20240129
 
 REM Starting Main Program...
 REM ============================================================================
 :Main
 
 REM Checking for the help menu...
-If /i "!_1!" == "/?" (Goto :Help)
-for %%A in ("--help" "-h" "-help" "/help" "help" "") do (if /i "!_1!"=="%%~A" (goto :help))
-for %%A in ("--ver" "-v" "/v" "-ver" "/ver" "ver") do (if /i "!_1!"=="%%~A" (echo.!_ver!&goto :End))
+REM Read more about '?' can't be escaped in FOR loop, so - checking for it seperately...
+REM Source: https://superuser.com/questions/1576114/window-batch-escaping-special-characters-in-for-sentence 
+If /i "%~1" == "/?" (Goto :Help)
+for %%A in ("" "--help" "-h" "-help" "/help" "help") do (if /i "%~1"=="%%~A" (goto :help))
+for %%A in ("--ver" "-v" "/v" "-ver" "/ver" "ver") do (if /i "%~1"=="%%~A" (echo.!_ver!&goto :End))
 
-REM Verifying the Required folder tree for files...
-for %%A in ("Json" "plugins" "Files" "Index" "Zips" "Temp") do if not exist "!_path!\%%~A" md "!_path!\%%~A"
-if /i "!_1!" NEQ "Update" (for %%A in ("name" "full_name" "default_branch" "license.name" "size" "description" "owner.login" "owner.avatar_url" "svn_url" "created_at" "updated_at" "id") do (if not exist "!_path!\Index\%%~A.index" (echo.Please run 'Bat Update' to finish the installation. &&goto :End)))
-
-REM Checking, if the Path already has path to Bat
+REM Checking, if the Path already has path to BatCenter
 for /f "skip=2 tokens=1,2,*" %%A in ('reg query HKCU\Environment /v Path') do (echo.%%C | find /i "batcenter" >nul 2>nul || (Call :FirstLaunch))
 
-set "path=!path!;!_path!;!_path!\Files;!_path!\plugins;!cd!;!cd!\files"
-Pushd "!_path!"
+REM Verifying the Required folder tree for files...
+Call :VerifyAndFixBatCenterFiles
+
+set "path=!path!;!_BatCenter!\Files;!_BatCenter!\plugins;!cd!\files"
+Pushd "!_BatCenter!"
 
 REM Checking if the '-y' is provided in parameters...
 REM Reading variables as per parameters...
@@ -85,7 +73,7 @@ REM Acting as per the Passed parameters...
 set _Valid=False
 if /i "!_1!" == "reset" (if /I "!_2!" == "all" (Goto :ResetAll) else (Goto :Reset))
 
-for %%A in ("update" "ilist" "list" "search" "install" "uninstall" "detail") do (
+for %%A in (!_commands!) do (
 	if "!_1!"=="%%~A" (
 		call :%%~A
 		set _Valid=True
@@ -108,12 +96,17 @@ goto :EOF
 
 :FirstLaunch
 echo Setting up BatCenter...
+rem Reading the current path variable value...
+for /f "skip=2 tokens=1,2,*" %%A in ('reg query HKCU\Environment /v Path') do (Set "_UserPath=%%C")
 
 @REM REM Adding BatCenter path to Environment variable...
-Echo. Added BATCENTER to PATH...
-for /f "skip=2 tokens=1,2,*" %%A in ('reg query HKCU\Environment /v Path') do (Set "_UserPath=%%C")
-Setx path "!_UserPath!;!_path!;!_path!\Files;!_path!\plugins;"
-@REM reg add HKCU\Environment /v Path /d "!path!;!_path!;!_path!\Files;!_path!\plugins;" /f
+Echo Adding BATCENTER to PATH...
+rem adding environmental variable to be used later... and to keep length of Path variable limited...
+Echo creating environmental variable... 'batcenter'...
+Setx batcenter "%%localappdata%%\BatCenter"
+
+Setx path "!_UserPath!%%batcenter%%\Files;%%batcenter%%\plugins;"
+@REM reg add HKCU\Environment /v Path /d "!path!;!_BatCenter!;!_BatCenter!\Files;!_BatCenter!\plugins;" /f
 
 echo Setup completed successfully
 REM Updating the environment path, without restarting.... (Thanks @anic17)
@@ -122,13 +115,12 @@ call EnvUpdate.bat
 Goto :EOF
 
 :Reset
-del /f /q "Files\hosts.txt" 
-del /f /q "Plugins\*.*"
-del /f /q "Index\*.*"
-del /f /q "Json\*.*"
-del /f /q "Zips\*.*"
-del /f /q "Temp\*.*"
-call :update
+del /f /q "!_BatCenter!\Files\hosts.txt" 
+del /f /q "!_BatCenter!\Plugins\*.*"
+del /f /q "!_BatCenter!\Index\*.*"
+del /f /q "!_BatCenter!\Json\*.*"
+del /f /q "!_BatCenter!\Zips\*.*"
+del /f /q "!_BatCenter!\Temp\*.*"
 Echo. BatCenter is Reset to its Initial State...as a New Install!!
 Echo. All Installed plugins/tools are removed...
 goto :EOF
@@ -151,7 +143,7 @@ echo !_UserPath! | find /i "batcenter" >nul 2>nul && (
 	Setx path "!_NewPath!"
 )
 
-rd /s /q "!_path!" 2>nul 2>&1 >nul 
+rd /s /q "!_BatCenter!" 2>nul 2>&1 >nul 
 echo.done
 Exit /b
 goto :EOF
@@ -195,7 +187,7 @@ if not exist "Temp\_Plugins.installed" (
 )
 
 if not "%_2%"=="" (
-	if exist "%_path%\Temp\_%_2%.content" (
+	if exist "%_BatCenter%\Temp\_%_2%.content" (
 		ReadLine "Index\name.index" %_2%
 		goto :EOF
 	) else (
@@ -304,7 +296,7 @@ REM echo !_Index_Number!
 call :FetchDetails !_Index_Number!
 echo.Starting download...
 call :Download !_Index_Number!
-<nul set /p ".=Extracting plugin files to %_path%\Plugins... "
+<nul set /p ".=Extracting plugin files to %_BatCenter%\Plugins... "
 
 pushd Plugins
 7za l "..\Zips\!_Github_ID!.zip" > nul 2>&1 && (echo.done) || (echo.failed)
@@ -449,7 +441,7 @@ for /f "tokens=2 delims=:" %%A in ('chcp') do set "codepage=%%A"
 chcp 65001 > nul
 
 REM Fetching Details of Selected Repo...
-for %%A in ("name" "full_name" "default_branch" "license.name" "size" "description" "owner.login" "owner.avatar_url" "svn_url" "created_at" "updated_at" "id") do (
+for %%A in (!_IndexFiles!) do (
 	if /i "%%~A" == "name" (set _var=_RepoName)
 	if /i "%%~A" == "full_name" (set _var=_RepoFullName)
 	if /i "%%~A" == "default_branch" (set _var=_RepoBranch)
@@ -502,6 +494,7 @@ echo. Description:		!_RepoDes!
 echo. Link:			!_RepoLink:"=!
 echo. --------------------------------------------------------------------
 if /i "!_1!" == "Detail" (echo.Install it with: "bat install !_Index_Number!")
+chcp !codepage! > nul
 goto :End
 
 REM ============================[ CHECK_NUMBER ]================================
@@ -518,7 +511,7 @@ call :CheckConnection _Error
 if !_Error! NEQ 0 (goto :End)
 
 REM Checking for Limited API calls condition...
-if exist "Files\BlockUpdate.txt" (echo.Too many API requests. Please wait some time&&echo.Limiting API calls only 180 times/hour, So your IP will not get Blacklisted. && goto :End)
+if exist "!_BatCenter!\Files\BlockUpdate.txt" (echo.Too many API requests. Please wait some time&&echo.Limiting API calls only 180 times/hour, So your IP will not get Blacklisted. && goto :End)
 
 REM Checking for BatCenter Update...
 set _UpdateBat=
@@ -538,20 +531,20 @@ if !_online_ver! GTR !_ver! (
     echo.A new version of BatCenter is available [Current: !_Temp_ver!, New: !_Temp_online_ver!]
 	echo.-------------------------------------------------------------------------------------------
 	echo.
-    wget "https://github.com/Batch-Man/BatCenter/archive/main.zip" -O "Zips\BatCenter.zip" -q --tries=5 --show-progress --timeout=5
-    	REM Creating a separate batch-file, as script overwriting  itself can lead to malfunctioning...
+    wget "https://github.com/Batch-Man/BatCenter/archive/main.zip" -O "!_BatCenter!\Zips\BatCenter.zip" -q --tries=5 --show-progress --timeout=5
+	REM Creating a separate batch-file, as script overwriting  itself can lead to malfunctioning...
    	(
 	echo @echo off
 	echo setlocal EnableDelayedExpansion
     echo title Updating BatCenter...
     echo cls
     echo echo.Extracting files...
-    echo pushd files
-    echo 7za e -y "!_path!\Zips\BatCenter.zip"
+    echo pushd "!_BatCenter!\files"
+    echo 7za e -y "!_BatCenter!\Zips\BatCenter.zip"
     echo REM Removing Empty Folders...
     echo for /f "tokens=*" %%%%A in ^('dir /b /a:d'^) do ^(Rd /S /Q "%%%%~A"^)
     echo popd
-	echo del /f /q "!_path!\Zips\BatCenter.zip" 
+	echo del /f /q "!_BatCenter!\Zips\BatCenter.zip" 
 	echo echo.Done
 	echo 
 	) >"!Temp!\UpdateBat.bat"
@@ -559,56 +552,60 @@ if !_online_ver! GTR !_ver! (
 )
 
 REM Removing Older Index Files...
-del /f /q "Index\*.*" >nul 2>nul
-del /f /q "Files\hosts.txt" >nul 2>nul
+del /f /q "!_BatCenter!\Index\*.*" >nul 2>nul
+del /f /q "!_BatCenter!\Files\hosts.txt" >nul 2>nul
 
 REM Need to check, if the Basic Json files are present...Otherwise, we'll update!
-if not exist "Files\hosts.txt" (Wget "https://raw.githubusercontent.com/Batch-Man/BatCenter/main/Install/hosts.txt" -O "Files\hosts.txt" -q --tries=5 --show-progress --timeout=5) else (if /i "%_2%" NEQ "" (find /i "%_2%" "Files\hosts.txt" >nul 2>nul && echo. Already in DB... || (echo.>>"Files\hosts.txt"&echo.%_2%>>"Files\hosts.txt")))
+if not exist "!_BatCenter!\Files\hosts.txt" (Wget "https://raw.githubusercontent.com/Batch-Man/BatCenter/main/Install/hosts.txt" -O "!_BatCenter!\Files\hosts.txt" -q --tries=5 --show-progress --timeout=5)
+
+if /i "!_2!" NEQ "" (find /i "!_2!" "!_BatCenter!\Files\hosts.txt" >nul 2>nul && (echo. Already in DB...) || (echo.!_2!>>"!_BatCenter!\Files\hosts.txt"))
 
 REM Getting Json files of each host...
-for /f "usebackq tokens=*" %%a in ("Files\hosts.txt") do (
-	wget "https://api.github.com/users/%%a/repos?per_page=100000&page=1" -O "Json\%%a.json" -q --tries=5 --show-progress --timeout=5
+for /f "usebackq tokens=*" %%a in ("!_BatCenter!\Files\hosts.txt") do (
+	wget "https://api.github.com/users/%%a/repos?per_page=100000&page=1" -O "!_BatCenter!\Json\%%a.json" -q --tries=5 --show-progress --timeout=5
 
 	REM Indexing Details...
-	for %%A in ("name" "full_name" "default_branch" "license.name" "size" "description" "owner.login" "owner.avatar_url" "svn_url" "created_at" "updated_at" "id") do (type "Json\%%a.json" | jq ".[] .%%~A" >> "Index\%%~A.index")
+	for %%A in (!_IndexFiles!) do (type "!_BatCenter!\Json\%%a.json" | jq ".[] .%%~A" >> "!_BatCenter!\Index\%%~A.index")
 	)
 
 REM Setting _Count to '0' (Preventing mixing-up of numbers after "Bat Update")
 set _Count=0
 
 REM Indexing the main name.json file...
-del /f /q "%Temp%\Tmp.index" >nul 2>nul
-for /f "usebackQ tokens=*" %%A in ("Index\name.index") do (
+del /f /q "!Temp!\Tmp.index" >nul 2>nul
+for /f "usebackQ tokens=*" %%A in ("!_BatCenter!\Index\name.index") do (
 	set /A _Count+=1
 	set _Temp_Line=%%~A
-	if defined _Temp_Line (echo.[!_Count!] - !_Temp_Line:-= !>>"!Temp!\Tmp.index")
+	if defined _Temp_Line (echo.[!_Count!]-!_Temp_Line:-= !>>"!Temp!\Tmp.index")
 	)
 
-copy /y "%Temp%\Tmp.index" "Index\name.index" >nul 2>nul
+copy /y "!Temp!\Tmp.index" "!_BatCenter!\Index\name.index" >nul 2>nul
 REM Keeping an eye on the Max Number of Plugins available...
 set _Max_Index=!_Count!
-echo.!_Max_Index!>"files\_Max_Index.Count"
+echo.!_Max_Index!>"!_BatCenter!\files\_Max_Index.Count"
 
 echo.Database updated successfully.
 REM LIMITING ACCESS TO API ONLY 180 TIMES/H (Thanks to @anic17 for Idea to improve)
+REM Since, in 1 update, we are calling github atleast 4 times... reducing number
+REM of requests to (180/4)... i.e. 45 times in an hour... 
 set _TempTime=!Time:~0,-6!
 set _TempTime=!_TempTime::=!
 
-if not exist "Files\_APIAccessTime.txt" (
+if not exist "!_BatCenter!\Files\_APIAccessTime.txt" (
 	REM Recording the Time of Usage for UPDATE COMMAND with BATCenter
-	echo.!_TempTime! > "Files\_APIAccessTime.txt"
-	echo 1 > "Files\_APIAccessCount.txt"
-	del /f /q "Files\BlockUpdate.txt" >nul 2>nul
+	echo.!_TempTime! >"!_BatCenter!\Files\_APIAccessTime.txt"
+	echo.1 >"!_BatCenter!\Files\_APIAccessCount.txt"
+	del /f /q "!_BatCenter!\Files\BlockUpdate.txt" >nul 2>nul
 	) else (
-	set /P _OldTime= < "Files\_APIAccessTime.txt"
+	set /P _OldTime= < "!_BatCenter!\Files\_APIAccessTime.txt"
 	set /A _TimeDifference=!_TempTime!-!_OldTime!
 	set _TimeDifference=!_TimeDifference:-=!
 
-	if !_TimeDifference! GTR 59 (del /f /q "Files\_APIAccessTime.txt")
-	set /p _TempCount= < "Files\_APIAccessCount.txt"
+	if !_TimeDifference! GTR 59 (del /f /q "!_BatCenter!\Files\_APIAccessTime.txt")
+	set /p _TempCount= < "!_BatCenter!\Files\_APIAccessCount.txt"
 	set /A _TempCount+=1
-	echo !_TempCount! > "Files\_APIAccessCount.txt"
-	if !_TempCount! GEQ 180 (echo.This file limits API calls...>"Files\BlockUpdate.txt")
+	echo.!_TempCount! > "!_BatCenter!\Files\_APIAccessCount.txt"
+	if !_TempCount! GEQ 45 (echo.This file limits API calls...>"!_BatCenter!\Files\BlockUpdate.txt")
 	)
 REM Updating BatCenter in case, if there is an update...
 if defined _UpdateBat (Start "" /SHARED /WAIT /B "!Temp!\UpdateBat.bat")
@@ -617,66 +614,31 @@ Exit /b 0
 REM ============================================================================
 :CheckConnection
 set /p ".=Checking internet connection..." <nul
-REM wget --server-response --spider --quiet "https://github.com" >nul 2>nul&& (echo. [OK]&&set "_Return=0") || (echo Failed to connect to the internet&&set "_Return=1")
-curl -s "www.github.com" >nul 2>nul&& (echo. [OK]&&set "_Return=0") || (echo Failed to connect to the internet&&set "_Return=1")
+wget --server-response --spider --quiet "https://github.com" >nul 2>nul&& (echo. [OK]&&set "_Return=0") || (echo. [Failed]&&set "_Return=1")
+REM curl -s "www.github.com" >nul 2>nul&& (echo. [OK]&&set "_Return=0") || (echo Failed to connect to the internet&&set "_Return=1")
 If /i "%~1" NEQ "" (set %~1=!_Return!)
 Exit /b !_Return!
 
 :VerifyAndFixBatCenterFiles
 REM Verifying the Required folder tree for files...
-for %%A in ("Json" "plugins" "Files" "Index" "Zips" "Temp") do (if not exist "!_BatCenterPath!\%%~A" (md "!_BatCenterPath!\%%~A"))
-	
-if /i "!_1!" == "Update" (
+for %%A in (!_FolderStructure!) do (if not exist "!_BatCenter!\%%~A" (md "!_BatCenter!\%%~A"))
 
-	REM Need to check, if the Basic Json files are present...Otherwise, we'll update!
-	if not exist "!_BatCenterPath!\Files\hosts.txt" (
-		echo.Getting hosts.txt file from the server...
-		REM Wget "https://raw.githubusercontent.com/Batch-Man/BatCenter/main/Install/hosts.txt" -O "!_BatCenterPath!\Files\hosts.txt" -q --tries=5 --show-progress --timeout=5
-		curl -o "!_BatCenterPath!\Files\hosts.txt" -# "https://raw.githubusercontent.com/Batch-Man/BatCenter/main/Install/hosts.txt"
+for %%A in (!_IndexFiles!) do (
+	if not exist "!_BatCenter!\Index\%%~A.index" (
+		echo.Please run 'Bat Update' to finish the installation.
+		goto :End
 	)
-
-	REM Getting Json files of each host...
-	for /f "usebackq tokens=*" %%a in ("!_BatCenterPath!\Files\hosts.txt") do (
-	REM wget "https://api.github.com/users/%%a/repos?per_page=100000&page=1" -O "!_BatCenterPath!\Json\%%a.json" -q --tries=5 --show-progress --timeout=5
-	curl -# -L "https://api.github.com/users/%%a/repos?per_page=100000&page=1" -o "!_BatCenterPath!\Json\%%a.json" -s --max-time 5 --retry 5 --retry-delay 1
-
-	REM Indexing Details...
-	Del /f /q "!_BatCenterPath!\Index\*.index" 2>nul >nul
-	for %%A in ("name" "full_name" "default_branch" "license.name" "size" "description" "owner.login" "owner.avatar_url" "svn_url" "created_at" "updated_at" "id") do (type "!_BatCenterPath!\Json\%%a.json" | jq ".[] .%%~A" >> "!_BatCenterPath!\Index\%%~A.index")
-	)
-
-	REM Setting _Count to '0' (Preventing mixing-up of numbers after "Bat Update")
-	set _Count=0
-
-	REM Indexing the main name.json file...
-	del /f /q "!Temp!\Tmp.index" >nul 2>nul
-	for /f "usebackQ tokens=*" %%A in ("!_BatCenterPath!\Index\name.index") do (
-		set /A _Count+=1
-		set _Temp_Line=%%~A
-		if defined _Temp_Line (echo.[!_Count!] - !_Temp_Line:-= !>>"!Temp!\Tmp.index")
-		)
-
-	copy /y "!Temp!\Tmp.index" "Index\name.index" >nul 2>nul
-	REM Keeping an eye on the Max Number of Plugins available...
-	set _Max_Index=!_Count!
-	echo.!_Max_Index!>"!_BatCenterPath!\files\_Max_Index.Count"
-)
-
-if /i "!_1!" NEQ "Update" (
-for %%A in ("name" "full_name" "default_branch" "license.name" "size" "description" "owner.login" "owner.avatar_url" "svn_url" "created_at" "updated_at" "id") do (
-	if not exist "!_BatCenterPath!\Index\%%~A.index" (echo.Please run 'Bat Update' to finish the installation. &&goto :End)
-)
 )
 Goto :EOF
 
-REM ============================================================================
+REM ================================[LIST]======================================
 :List
 set _Count=0
-if not exist "Index\name.index" (echo.No index file. Please run 'bat update' command.&&goto :End)
-type "Index\name.index"
+if not exist "!_BatCenter!\Index\name.index" (echo.No index file. Please run 'bat update' command.&&goto :End)
+type "!_BatCenter!\Index\name.index"
 goto :End
 
-REM ============================================================================
+REM ===============================[SEARCH]=====================================
 :Search [_ResultArrayName] [_ResultArrayMaxCount]
 set "_RCount=%~1"
 set "_Return=%~2"
@@ -719,7 +681,6 @@ goto :EOF
 
 REM ============================================================================
 :End
-chcp %codepage% > nul
 Popd
 Endlocal
 Exit /b
@@ -728,15 +689,14 @@ REM ============================================================================
 :Help
 @(
 echo.
-echo.BatCenter - A Package manager for your Scripts. 
-echo.Batch-Man's plugin manager
+echo.     BatCenter - A Package manager for your Scripts. [v!_ver!]
+echo.                    Batch-Man's plugin manager
+echo.
 echo.BatCenter helps you searching, downloading batch plugins/tools from the
 echo.selected trusted sources. You can add your own trusted sources too.
 echo.
-echo. www.batch-man.com
-echo.
-echo.Syntax:
-echo.
+echo.                         www.batch-man.com
+echo.                                Syntax:
 echo.bat update [GITHUB USER]
 echo.bat list
 echo.bat ilist
@@ -745,13 +705,12 @@ echo.bat install [Local ID ^| [Term1] [Term2] ...]
 echo.bat detail [Local ID ^| [Term1] [Term2] ...]
 echo.bat reset [all]
 echo.bat [help ^| /? ^| -h ^| -help ^| --help ^| /help]
-echo.bat ver
+echo.bat [ver ^| --ver ^| -v ^| /v ^| -ver ^| /ver]
 echo.
-echo.Where:
-echo.
+echo.                               Where:
 echo.ver			: Displays version of program
 echo.help			: Displays help for the program
-echo.update				: Updates the database from Trusted hosts
+echo.update			: Updates the database from Trusted hosts
 echo.list			: Lists all the plugins that can be installed
 echo.ilist			: Lists all the installed plugins
 echo.search			: Filters out plugins as per the given keywords
@@ -759,12 +718,10 @@ echo.install			: Downloads and installs the plugins
 echo.detail			: Provides detail about the filtered project
 echo.reset [all]		: Removes installed plugins ^| with [all] it uninstalls BatCenter
 echo.
-echo.Switches:
-echo.
+echo.                               Switches:
 echo.-y ^| /y			: Suppresses prompting to confirm your action
 echo.
-echo.Examples:
-echo.
+echo.                               Examples:
 echo.bat update
 echo.bat update microsoft
 echo.bat list
@@ -780,8 +737,7 @@ echo.bat reset all
 echo.bat ver
 echo.bat /?
 echo.
-echo.Required external tools: ^(list of dependencies^)
-echo.
+echo.           Required external tools: ^(list of dependencies^)
 echo.7za.exe 			by 7z
 echo.jq.exe 				by stedolan 
 echo.Getlen.bat			by Kvc
@@ -789,13 +745,12 @@ echo.ReadLine.exe			by Kvc ^& anic17
 echo.StrSplit.exe			by Kvc
 echo.wget.exe			by Hrvoje
 echo.
-echo.Authors:
-echo.
+echo.                               Authors:
 echo.Kvc: 				Main developer, maintainer
 echo.anic17: 			Various improvements, maintainer
 echo.GroophyLifeFor: 		Minor improvements, created the 5S utility
 echo.
-echo.Made by and for Batch-Man
-echo.See more at https://batch-man.com
+echo.                       Made by and for Batch-Man
+echo.                   See more at https://batch-man.com
 ) > "conout$"
 goto :End
