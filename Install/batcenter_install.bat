@@ -19,6 +19,8 @@ REM ============================================================================
 REM Going to TEMP Dir to avoiding creating mess in current folder...
 IF NOT EXIST "%TEMP%\BATCENTER_TEMP" (MD "%TEMP%\BATCENTER_TEMP")
 PUSHD "%TEMP%\BATCENTER_TEMP"
+
+set _ver=20240130
 set "_BatCenter=%LocalAppData%\BatCenter"
 
 REM Script to install BatCenter by Kvc
@@ -41,10 +43,10 @@ Del /f /q "bat.7z" >nul 2>nul
 Echo. done
 
 Title BatCenter
-IF NOT EXIST "%LocalAppData%\BatCenter\Files" (MD "%LocalAppData%\BatCenter\Files")
-Copy /y "*.*" "%LocalAppData%\BatCenter\Files" >nul 2>nul
+IF NOT EXIST "%_BatCenter%\Files" (MD "%_BatCenter%\Files")
+Copy /y "*.*" "%_BatCenter%\Files" >nul 2>nul
 
-PUSHD "%LocalAppData%\BatCenter\Files"
+PUSHD "%_BatCenter%\Files"
 
 set "_batcenterExists=True"
 REM Checking, if the Path already has BatCenter
@@ -71,13 +73,13 @@ timeout /t 3
 call EnvUpdate.bat
 POPD
 
-Set "Path=%Path%;%LocalAppData%\BatCenter\Files;"
+Set "Path=%Path%;%_BatCenter%\Files;"
 Echo.
 echo.BatCenter has been successfully installed.
 echo.
 Echo.If calling 'bat /?' doesn't work, try logging off and then login again.
 echo.
-echo.To report any ERROR, or give suggestions... please contact me @:
+echo.To report any ERROR, or give suggestions... please contact @:
 echo.https://github.com/Batch-Man/BatCenter/issues
 echo.
 Echo.https://batch-man.com

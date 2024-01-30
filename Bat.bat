@@ -33,7 +33,7 @@ REM https://github.com/Batch-Man/BatCenter
 
 
 REM Setting version information...
-set _ver=20240130
+set _ver=20240131
 
 REM Starting Main Program...
 REM ============================================================================
