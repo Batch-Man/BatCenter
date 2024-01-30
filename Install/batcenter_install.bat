@@ -21,7 +21,7 @@ REM Going to TEMP Dir to avoiding creating mess in current folder...
 IF NOT EXIST "!TEMP!\BATCENTER_TEMP" (MD "!TEMP!\BATCENTER_TEMP")
 PUSHD "!TEMP!\BATCENTER_TEMP"
 
-set _ver=20240131
+set _ver=20240201
 set "_BatCenter=!LocalAppData!\BatCenter"
 
 REM Script to install BatCenter by Kvc
@@ -69,9 +69,6 @@ if /i "!_batcenterExists!" NEQ "True" (
     REM Updating the environment path, without restarting.... (Thanks @anic17)
     gpupdate /force
 )
-Call Bat update
-timeout /t 3
-call EnvUpdate.bat
 POPD
 
 Set "Path=!Path!;!_BatCenter!\Files;"

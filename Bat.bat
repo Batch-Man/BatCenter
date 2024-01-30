@@ -33,7 +33,7 @@ REM https://github.com/Batch-Man/BatCenter
 
 
 REM Setting version information...
-set _ver=20240201
+set _ver=20240202
 
 REM Starting Main Program...
 REM ============================================================================
@@ -142,9 +142,11 @@ echo !_UserPath! | find /i "batcenter" 2>nul >nul && (
 	setx path "!_NewPath:~0,-2!"
 )
 popd
-rd /s /q "!_BatCenter!" 2>nul 2>&1 >nul 
+rem creating another file... as a file can't remove itself...
+echo.@timeout /t 3 >"!temp!\remove_batcenter.bat"
+echo.@rd /s /q "!_BatCenter!" >>"!temp!\remove_batcenter.bat" 
+start "Resetting batcenter" "!temp!\remove_batcenter.bat"
 echo.done
-Exit /b
 goto :EOF
 
 :iList
