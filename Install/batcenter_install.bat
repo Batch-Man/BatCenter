@@ -21,7 +21,7 @@ REM Going to TEMP Dir to avoiding creating mess in current folder...
 IF NOT EXIST "!TEMP!\BATCENTER_TEMP" (MD "!TEMP!\BATCENTER_TEMP")
 PUSHD "!TEMP!\BATCENTER_TEMP"
 
-set _ver=20240201
+set _ver=20240202
 set "_BatCenter=!LocalAppData!\BatCenter"
 
 REM Script to install BatCenter by Kvc
@@ -75,7 +75,8 @@ Set "Path=!Path!;!_BatCenter!\Files;"
 Echo.
 echo.BatCenter has been successfully installed.
 echo.
-Echo.If calling 'bat /?' doesn't work, try logging off and then login again.
+Echo.If calling 'bat /?' doesn't work, open new 'cmd' and try again...
+echo. OR try logging off and then login again.
 echo.
 echo.To report any ERROR, or give suggestions... please contact @:
 echo.https://github.com/Batch-Man/BatCenter/issues

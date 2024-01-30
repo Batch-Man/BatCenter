@@ -33,7 +33,7 @@ REM https://github.com/Batch-Man/BatCenter
 
 
 REM Setting version information...
-set _ver=20240202
+set _ver=20240130
 
 REM Starting Main Program...
 REM ============================================================================
@@ -137,14 +137,25 @@ echo !_UserPath! | find /i "batcenter" 2>nul >nul && (
 	for %%A in ("!_UserPath:;=";"!") do (echo.%%~A | find /i "batcenter" >nul 2>nul || (set "_NewPath=!_NewPath!%%~A;"))
 	
 	set /p ".=Removing BatCenter from path... " <nul
+   
+	:checkLastchar
+	rem it is noticed that sometimes, while removing batcenter from path
+	rem it doens't remove extra semicolons from the path... 
+	rem so, removing them in this loop...
+	if /I "!_NewPath:~-1!" == ";" (
+		set _NewPath=!_NewPath:~0,-1!
+		goto :checkLastchar
+	)
+
 	REM Removing BatCenter path from Environment variable...
 	@REM reg add HKCU\Environment /v Path /d "!_NewPath!" /f 2>nul >nul
-	setx path "!_NewPath:~0,-2!"
+	setx path "!_NewPath!"
 )
 popd
 rem creating another file... as a file can't remove itself...
 echo.@timeout /t 3 >"!temp!\remove_batcenter.bat"
 echo.@rd /s /q "!_BatCenter!" >>"!temp!\remove_batcenter.bat" 
+echo.@exit >> "!temp!\remove_batcenter.bat"
 start "Resetting batcenter" "!temp!\remove_batcenter.bat"
 echo.done
 goto :EOF
