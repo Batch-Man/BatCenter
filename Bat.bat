@@ -531,6 +531,8 @@ if exist "!_BatCenter!\Files\BlockUpdate.txt" (echo.Too many API requests. Pleas
 REM Checking for BatCenter Update...
 set _UpdateBat=
 set _online_ver=
+IF EXIST "!Temp!\UpdateBat.bat" (del /f /q "!Temp!\*.bat" >nul 2>nul)
+
 wget -qO- "https://raw.githubusercontent.com/Batch-Man/BatCenter/main/Bat.bat" | find /i "set _ver=" > "!Temp!\_Ver.txt"
 for /f "eol=w usebackq tokens=1,2* delims==" %%a in ("!Temp!\_Ver.txt") do (if not defined _online_ver (set "_online_ver=%%~b"))
 
@@ -543,24 +545,24 @@ set _ver=!_ver:.=!
 set _online_ver=!_online_ver:.=!
 if !_online_ver! GTR !_ver! (
 	echo.-------------------------------------------------------------------------------------------
-    echo.A new version of BatCenter is available [Current: !_Temp_ver!, New: !_Temp_online_ver!]
+   echo.A new version of BatCenter is available [Current: !_Temp_ver!, New: !_Temp_online_ver!]
 	echo.-------------------------------------------------------------------------------------------
 	echo.
-    wget "https://github.com/Batch-Man/BatCenter/archive/main.zip" -O "!_BatCenter!\Zips\BatCenter.zip" -q --tries=5 --show-progress --timeout=5
+   wget "https://github.com/Batch-Man/BatCenter/archive/main.zip" -O "!_BatCenter!\Zips\BatCenter.zip" -q --tries=5 --show-progress --timeout=5
 	REM Creating a separate batch-file, as script overwriting  itself can lead to malfunctioning...
-   	(
-	echo @echo off
-	echo setlocal EnableDelayedExpansion
+   (
+    echo @echo off
+    echo setlocal EnableDelayedExpansion
     echo title Updating BatCenter...
     echo echo.Extracting files...
     echo pushd "!_BatCenter!\files"
     echo 7za e -y "!_BatCenter!\Zips\BatCenter.zip"
     echo REM Removing Empty Folders...
-    echo for /f "tokens=*" %%%%A in ^('dir /b /a:d'^) do ^(Rd /S /Q "%%%%~A"^)
+    echo for /f "tokens=*" %%%%A in ^('dir /b /a:d'^) do ^(Rd /S /Q "%%%%~A" ^>nul 2^>nul ^)
     echo popd
-	echo del /f /q "!_BatCenter!\Zips\BatCenter.zip" 
-	echo echo.Done
-	echo 
+    echo del /f /q "!_BatCenter!\Zips\BatCenter.zip" 
+    echo echo.Done
+    echo exit
 	) >"!Temp!\UpdateBat.bat"
 	set _UpdateBat=True
 )

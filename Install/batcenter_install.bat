@@ -71,7 +71,6 @@ if /i "!_batcenterExists!" NEQ "True" (
 )
 POPD
 
-Set "Path=!Path!;!_BatCenter!\Files;"
 Echo.
 echo.BatCenter has been successfully installed.
 echo.
@@ -84,6 +83,7 @@ echo.
 Echo.https://batch-man.com
 POPD
 RD /S /Q "!TEMP!\BATCENTER_TEMP" >nul 2>nul
+Endlocal && Set "Path=%Path%;%_BatCenter%\Files;"
 Exit /b
 
 :Get_wget
