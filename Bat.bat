@@ -130,18 +130,18 @@ set _NewPath=
 
 REM Checking, if the Path already has path to BatCenter...
 for /f "skip=2 tokens=1,2,*" %%A in ('reg query HKCU\Environment /v Path') do (Set "_UserPath=%%C")
-echo !_UserPath! | find /i "batcenter" >nul 2>nul && (
+echo !_UserPath! | find /i "batcenter" 2>nul >nul && (
 
 	REM Thanks Bing-AI for the following trick so i can eliminate the use of dedicated
 	REM dependenacy only for this task... (removed strsplit.exe)
-	for %%A in ("!_UserPath:;=";"!") do (echo.%%~A | find /i "batcenter" || (set "_NewPath=!_NewPath!%%~A;"))
+	for %%A in ("!_UserPath:;=";"!") do (echo.%%~A | find /i "batcenter" >nul 2>nul || (set "_NewPath=!_NewPath!%%~A;"))
 	
 	set /p ".=Removing BatCenter from path... " <nul
 	REM Removing BatCenter path from Environment variable...
 	@REM reg add HKCU\Environment /v Path /d "!_NewPath!" /f 2>nul >nul
 	setx path "!_NewPath!"
 )
-cd /
+popd
 rd /s /q "!_BatCenter!" 2>nul 2>&1 >nul 
 echo.done
 Exit /b
