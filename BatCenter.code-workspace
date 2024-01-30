@@ -4,5 +4,10 @@
 			"path": "."
 		}
 	],
-	"settings": {}
+	"settings": {
+		"bat-tools.outline.isHierarchy": true,
+		"bat-tools.outline.indexingWord": "^\\s*(::|REM|:)\\s*(#+)\\s*(.*)",
+		"editor.tabCompletion": "on",
+		"emmet.triggerExpansionOnTab": true
+	}
 }

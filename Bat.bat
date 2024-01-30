@@ -33,7 +33,7 @@ REM https://github.com/Batch-Man/BatCenter
 
 
 REM Setting version information...
-set _ver=20240131
+set _ver=20240201
 
 REM Starting Main Program...
 REM ============================================================================
@@ -139,7 +139,7 @@ echo !_UserPath! | find /i "batcenter" 2>nul >nul && (
 	set /p ".=Removing BatCenter from path... " <nul
 	REM Removing BatCenter path from Environment variable...
 	@REM reg add HKCU\Environment /v Path /d "!_NewPath!" /f 2>nul >nul
-	setx path "!_NewPath!"
+	setx path "!_NewPath:~0,-2!"
 )
 popd
 rd /s /q "!_BatCenter!" 2>nul 2>&1 >nul 
@@ -572,7 +572,7 @@ for /f "usebackq tokens=*" %%a in ("!_BatCenter!\Files\hosts.txt") do (
 REM Setting _Count to '0' (Preventing mixing-up of numbers after "Bat Update")
 set _Count=0
 
-REM Indexing the main name.json file...
+REM Indexing the main name.json file... 
 del /f /q "!Temp!\Tmp.index" >nul 2>nul
 for /f "usebackQ tokens=*" %%A in ("!_BatCenter!\Index\name.index") do (
 	set /A _Count+=1
@@ -610,7 +610,7 @@ if not exist "!_BatCenter!\Files\_APIAccessTime.txt" (
 	)
 REM Updating BatCenter in case, if there is an update...
 if defined _UpdateBat (Start "" /SHARED /WAIT /B "!Temp!\UpdateBat.bat")
-Exit /b 0
+Goto :EOF
 
 REM ============================================================================
 :CheckConnection

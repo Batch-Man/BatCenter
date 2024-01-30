@@ -1,4 +1,5 @@
 @Echo off
+Setlocal EnableDelayedExpansion
 
 REM ==============================================================================================
 REM This installer code is again improved by 'kvc' on 21-Oct-2022 (4 days before his birthday)
@@ -17,11 +18,11 @@ REM
 REM ==============================================================================================
 
 REM Going to TEMP Dir to avoiding creating mess in current folder...
-IF NOT EXIST "%TEMP%\BATCENTER_TEMP" (MD "%TEMP%\BATCENTER_TEMP")
-PUSHD "%TEMP%\BATCENTER_TEMP"
+IF NOT EXIST "!TEMP!\BATCENTER_TEMP" (MD "!TEMP!\BATCENTER_TEMP")
+PUSHD "!TEMP!\BATCENTER_TEMP"
 
 set _ver=20240131
-set "_BatCenter=%LocalAppData%\BatCenter"
+set "_BatCenter=!LocalAppData!\BatCenter"
 
 REM Script to install BatCenter by Kvc
 Echo.Fetching files from server...
@@ -43,16 +44,16 @@ Del /f /q "bat.7z" >nul 2>nul
 Echo. done
 
 Title BatCenter
-IF NOT EXIST "%_BatCenter%\Files" (MD "%_BatCenter%\Files")
-Copy /y "*.*" "%_BatCenter%\Files" >nul 2>nul
+IF NOT EXIST "!_BatCenter!\Files" (MD "!_BatCenter!\Files")
+Copy /y "*.*" "!_BatCenter!\Files" >nul 2>nul
 
-PUSHD "%_BatCenter%\Files"
+PUSHD "!_BatCenter!\Files"
 
 set "_batcenterExists=True"
 REM Checking, if the Path already has BatCenter
 for /f "skip=2 tokens=1,2,*" %%A in ('reg query HKCU\Environment /v Path') do (echo.%%C | find /i "batcenter" >nul 2>nul || (Set "_batcenterExists=False"))
 
-if /i "%_batcenterExists%" NEQ "True" (
+if /i "!_batcenterExists!" NEQ "True" (
     Set _UserPath=
     echo Setting up BatCenter...
     rem Reading the current path variable value...
@@ -61,7 +62,7 @@ if /i "%_batcenterExists%" NEQ "True" (
     @REM REM Adding BatCenter path to Environment variable...
     Echo Adding BATCENTER to PATH...
     
-    Setx path "%_UserPath%;%_BatCenter%\Files;%_BatCenter%\plugins;"
+    Setx path "!_UserPath!;!_BatCenter!\Files;!_BatCenter!\plugins;"
     @REM reg add HKCU\Environment /v Path /d "!path!;!_BatCenter!;!_BatCenter!\Files;!_BatCenter!\plugins;" /f
     
     echo Setup completed successfully
@@ -73,7 +74,7 @@ timeout /t 3
 call EnvUpdate.bat
 POPD
 
-Set "Path=%Path%;%_BatCenter%\Files;"
+Set "Path=!Path!;!_BatCenter!\Files;"
 Echo.
 echo.BatCenter has been successfully installed.
 echo.
@@ -84,7 +85,7 @@ echo.https://github.com/Batch-Man/BatCenter/issues
 echo.
 Echo.https://batch-man.com
 POPD
-RD /S /Q "%TEMP%\BATCENTER_TEMP" >nul 2>nul
+RD /S /Q "!TEMP!\BATCENTER_TEMP" >nul 2>nul
 Exit /b
 
 :Get_wget
@@ -1875,7 +1876,7 @@ Echo.Ren "_temp.ex_" "%~2" >>"DL.bat"
 Echo.exit >>"DL.bat"
 
 start /b DL.bat
-set /p ".=Getting '%~2'... %_CurSavePos%" <nul
+set /p ".=Getting '%~2'... %_CurSavePos%%" <nul
 set _fileSize=0
 
 :loop
