@@ -33,7 +33,7 @@ REM https://github.com/Batch-Man/BatCenter
 
 
 REM Setting version information...
-set _ver=20240130
+set _ver=20240131
 
 REM Starting Main Program...
 REM ============================================================================
@@ -129,7 +129,7 @@ REM Removing BatCenter from Path...
 set _NewPath=
 
 REM Checking, if the Path already has path to BatCenter...
-for /f "skip=2 tokens=1,2,*" %%A in ('reg query HKCU\Environment /v Path') do (Set "_UserPath=%%C")
+for /f "skip=2 tokens=1,2,*" %%A in ('reg query HKCU\Environment /v Path 2^>nul') do (Set "_UserPath=%%C")
 echo !_UserPath! | find /i "batcenter" 2>nul >nul && (
 
 	REM Thanks Bing-AI for the following trick so i can eliminate the use of dedicated
@@ -531,7 +531,7 @@ if exist "!_BatCenter!\Files\BlockUpdate.txt" (echo.Too many API requests. Pleas
 REM Checking for BatCenter Update...
 set _UpdateBat=
 set _online_ver=
-IF EXIST "!Temp!\UpdateBat.bat" (del /f /q "!Temp!\*.bat" >nul 2>nul)
+IF EXIST "!Temp!\UpdateBat.bat" (del /f /q "!Temp!\UpdateBat.bat" >nul 2>nul)
 
 wget -qO- "https://raw.githubusercontent.com/Batch-Man/BatCenter/main/Bat.bat" | find /i "set _ver=" > "!Temp!\_Ver.txt"
 for /f "eol=w usebackq tokens=1,2* delims==" %%a in ("!Temp!\_Ver.txt") do (if not defined _online_ver (set "_online_ver=%%~b"))
@@ -625,7 +625,7 @@ if not exist "!_BatCenter!\Files\_APIAccessTime.txt" (
 	)
 REM Updating BatCenter in case, if there is an update...
 if defined _UpdateBat (Start "" /SHARED /WAIT /B "!Temp!\UpdateBat.bat")
-Goto :EOF
+Goto :End
 
 REM ============================================================================
 :CheckConnection
@@ -695,7 +695,7 @@ if exist "Files\_Max_Index.count" (set /p _Max_Index=<"Files\_Max_Index.count") 
 Endlocal && set "%~1=%_Max_Index%"
 goto :EOF
 
-REM ============================================================================
+REM ==================================== [End] =================================
 :End
 Popd
 Endlocal
@@ -704,14 +704,15 @@ REM ============================================================================
 
 :Help
 @(
-echo.
+echo.============================================================================
 echo.     BatCenter - A Package manager for your Scripts. [v!_ver!]
 echo.                    Batch-Man's plugin manager
-echo.
+echo.============================================================================
 echo.BatCenter helps you searching, downloading batch plugins/tools from the
 echo.selected trusted sources. You can add your own trusted sources too.
 echo.
 echo.                         www.batch-man.com
+echo.----------------------------------------------------------------------------
 echo.                                Syntax:
 echo.bat update [GITHUB USER]
 echo.bat list
@@ -723,6 +724,7 @@ echo.bat reset [all]
 echo.bat [help ^| /? ^| -h ^| -help ^| --help ^| /help]
 echo.bat [ver ^| --ver ^| -v ^| /v ^| -ver ^| /ver]
 echo.
+echo.----------------------------------------------------------------------------
 echo.                               Where:
 echo.ver			: Displays version of program
 echo.help			: Displays help for the program
@@ -737,7 +739,9 @@ echo.
 echo.                               Switches:
 echo.-y ^| /y			: Suppresses prompting to confirm your action
 echo.
+echo.----------------------------------------------------------------------------
 echo.                               Examples:
+echo.----------------------------------------------------------------------------
 echo.bat update
 echo.bat update microsoft
 echo.bat list
@@ -753,6 +757,7 @@ echo.bat reset all
 echo.bat ver
 echo.bat /?
 echo.
+echo.============================================================================
 echo.           Required external tools: ^(list of dependencies^)
 echo.7za.exe 			by 7z
 echo.jq.exe 				by stedolan 

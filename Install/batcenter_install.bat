@@ -51,7 +51,8 @@ PUSHD "!_BatCenter!\Files"
 
 set "_batcenterExists=True"
 REM Checking, if the Path already has BatCenter
-for /f "skip=2 tokens=1,2,*" %%A in ('reg query HKCU\Environment /v Path') do (echo.%%C | find /i "batcenter" >nul 2>nul || (Set "_batcenterExists=False"))
+reg query HKCU\Environment /v Path >nul 2>nul || (Set "_batcenterExists=False")
+for /f "skip=2 tokens=1,2,*" %%A in ('reg query HKCU\Environment /v Path 2^>nul') do (echo.%%C | find /i "batcenter" >nul 2>nul || (Set "_batcenterExists=False"))
 
 if /i "!_batcenterExists!" NEQ "True" (
     Set _UserPath=
