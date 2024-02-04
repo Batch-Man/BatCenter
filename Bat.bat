@@ -33,7 +33,7 @@ REM https://github.com/Batch-Man/BatCenter
 
 
 REM Setting version information...
-set _ver=20240131
+set _ver=20240202
 
 REM Starting Main Program...
 REM ============================================================================
@@ -544,24 +544,25 @@ REM Comparing the versions...
 set _ver=!_ver:.=!
 set _online_ver=!_online_ver:.=!
 if !_online_ver! GTR !_ver! (
-	echo.-------------------------------------------------------------------------------------------
-   echo.A new version of BatCenter is available [Current: !_Temp_ver!, New: !_Temp_online_ver!]
-	echo.-------------------------------------------------------------------------------------------
+	echo.----------------------------------------------------------------------------
+   echo. BatCenter update available [Current: !_Temp_ver!, New: !_Temp_online_ver!]
+	echo.----------------------------------------------------------------------------
 	echo.
    wget "https://github.com/Batch-Man/BatCenter/archive/main.zip" -O "!_BatCenter!\Zips\BatCenter.zip" -q --tries=5 --show-progress --timeout=5
 	REM Creating a separate batch-file, as script overwriting  itself can lead to malfunctioning...
    (
     echo @echo off
     echo setlocal EnableDelayedExpansion
-    echo title Updating BatCenter...
-    echo echo.Extracting files...
-    echo pushd "!_BatCenter!\files"
-    echo 7za e -y "!_BatCenter!\Zips\BatCenter.zip"
-    echo REM Removing Empty Folders...
-    echo for /f "tokens=*" %%%%A in ^('dir /b /a:d'^) do ^(Rd /S /Q "%%%%~A" ^>nul 2^>nul ^)
-    echo popd
-    echo del /f /q "!_BatCenter!\Zips\BatCenter.zip" 
-    echo echo.Done
+    echo @title Updating BatCenter...
+    echo @echo.Extracting files...
+    echo @pushd "!_BatCenter!\files"
+    echo @7za e -y "!_BatCenter!\Zips\BatCenter.zip" 2^>nul ^>nul
+    echo @echo.Extraction complete.
+    echo @Echo Removing Empty Folders...
+    echo @for /f "tokens=*" %%%%A in ^('dir /b /a:d'^) do ^(Rd /S /Q "%%%%~A" ^>nul 2^>nul ^)
+    echo @popd
+    echo @del /f /q "!_BatCenter!\Zips\BatCenter.zip" 
+    echo @echo.Done
     echo exit
 	) >"!Temp!\UpdateBat.bat"
 	set _UpdateBat=True
