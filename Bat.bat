@@ -33,7 +33,7 @@ REM https://github.com/Batch-Man/BatCenter
 
 
 REM Setting version information...
-set _ver=20240202
+set _ver=20240204
 
 REM Starting Main Program...
 REM ============================================================================
@@ -71,7 +71,7 @@ set _Valid=False
 if /i "!_1!" == "reset" (if /I "!_2!" == "all" (Goto :ResetAll) else (Goto :Reset))
 
 for %%A in (!_commands!) do (
-	if "!_1!"=="%%~A" (
+	if /i "!_1!"=="%%~A" (
 		call :%%~A
 		set _Valid=True
 	)
