@@ -33,7 +33,7 @@ REM https://github.com/Batch-Man/BatCenter
 
 
 REM Setting version information...
-set _ver=20240204
+set _ver=20240207
 
 REM Starting Main Program...
 REM ============================================================================
@@ -79,8 +79,7 @@ for %%A in (!_commands!) do (
 if /i "!_Valid!" == "False" (echo.Invalid parameter. Type 'bat /?' for help.)
 goto :End
 
-REM ============================================================================
-
+REM ============================ [UNINSTALL] ===================================
 :Uninstall
 REM set _Index_Number=%_1%
 REM Generating a Temp File, for the list of installed plugins
@@ -91,6 +90,7 @@ REM for /f "usebackQ tokens=*" %%A in ("Temp\_Plugins.installed") do (if /I "%%~
 echo.This feature will come soon.
 goto :EOF
 
+REM ============================ [FIRST LAUNCH] ================================
 :FirstLaunch
 Set _UserPath=
 
@@ -510,7 +510,7 @@ chcp !codepage! > nul
 goto :End
 
 REM ============================[ CHECK_NUMBER ]================================
-:check_Number
+:check_Number [%1 = String to Check] [%2 = True or False]
 set _Number=%~1
 for /L %%A in (0,1,9) do (if defined _Number (set _Number=!_Number:%%~A=!))
 if not defined _Number (set %~2=T) else (set %~2=F)
