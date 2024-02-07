@@ -563,7 +563,7 @@ if !_online_ver! GTR !_ver! (
         echo @popd
         echo @del /f /q "!_BatCenter!\Zips\BatCenter.zip"
         echo @echo.Done
-        echo exit
+        echo exit /b
 	 ) >"!Temp!\UpdateBat.bat"
 	 set _UpdateBat=True
 )
