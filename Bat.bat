@@ -25,7 +25,7 @@ REM OR
 REM https://github.com/Batch-Man/BatCenter
 
 REM Setting version information...
-set _ver=20240207
+set _ver=20240209
 
 REM Starting Main Program...
 REM ============================================================================
@@ -216,8 +216,6 @@ goto :End
 REM =============================[ INSTALL ]====================================
 :Install
 if /i "!_2!" == "" (echo.Missing search term. See 'bat /?' && goto :End)
-
-
 
 set _Local_ID=!_2!
 call :check_Number !_Local_ID! _IsNum
