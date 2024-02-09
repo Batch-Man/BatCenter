@@ -1,4 +1,14 @@
 {
   "emmet.triggerExpansionOnTab": true,
-  "editor.tabCompletion": "on"
+  "editor.tabCompletion": "on",
+  "editor.snippetSuggestions": "bottom",
+  "editor.quickSuggestions": {
+    "comments": "on",
+    "strings": "on"
+  },
+  "editor.semanticHighlighting.enabled": true,
+  "editor.defaultFormatter": "VisualStudioExptTeam.vscodeintellicode",
+  "workbench.editor.languageDetection": true,
+  "rech.batch.initialTabAlignment": "off",
+  "rech.batch.snippetsType": "Rech Internal"
 }

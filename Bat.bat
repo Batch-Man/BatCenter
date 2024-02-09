@@ -1,12 +1,5 @@
 @echo off
-setlocal EnableDelayedExpansion
-
-set "_BatCenter=!LocalAppData!\BatCenter"
-set "Original_Path=!path!"
-if not exist "!_BatCenter!" (md "!_BatCenter!")
-set _FolderStructure="Json" "plugins" "Files" "Index" "Zips" "Temp"
-set _IndexFiles="name" "full_name" "default_branch" "license.name" "size" "description" "owner.login" "owner.avatar_url" "svn_url" "created_at" "updated_at" "id"
-set _commands="update" "ilist" "list" "search" "install" "uninstall" "detail"
+setlocal EnableDelayedExpansion 
 
 REM THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY
 REM KIND, EXPRESS OR IMPLIED, INCLUDING BUT not LIMITED TO THE
@@ -31,7 +24,6 @@ REM for More Visit: www.batch-man.com
 REM OR
 REM https://github.com/Batch-Man/BatCenter
 
-
 REM Setting version information...
 set _ver=20240207
 
@@ -39,18 +31,21 @@ REM Starting Main Program...
 REM ============================================================================
 :Main
 
+REM Reading configuration file...
+set _config=Bat.conf
+for /f "tokens=*" %%A in ("!_config!") do (%%A)
+
 REM Checking for the help menu...
 REM Read more about '?' can't be escaped in FOR loop, so - checking for it seperately...
 REM Source: https://superuser.com/questions/1576114/window-batch-escaping-special-characters-in-for-sentence 
 If /i "%~1" == "/?" (Goto :Help)
-for %%A in ("" "--help" "-h" "-help" "/help" "help") do (if /i "%~1"=="%%~A" (goto :help))
-for %%A in ("--ver" "-v" "/v" "-ver" "/ver" "ver") do (if /i "%~1"=="%%~A" (echo.!_ver!&goto :End))
+for %%A in (!_helpOptions!) do (if /i "%~1"=="%%~A" (goto :help))
+for %%A in (!_verOptions!) do (if /i "%~1"=="%%~A" (echo.!_ver!&goto :End))
 
 REM Verifying the Required folder tree for files...
 Call :VerifyAndFixBatCenterFiles
 
 set "path=!path!;!_BatCenter!\Files;!_BatCenter!\plugins;!cd!\files"
-Pushd "!_BatCenter!"
 
 REM Checking if the '-y' is provided in parameters...
 REM Reading variables as per parameters...
@@ -81,12 +76,12 @@ goto :End
 
 REM ============================ [UNINSTALL] ===================================
 :Uninstall
-REM set _Index_Number=%_1%
+REM set _Local_ID=!_1!
 REM Generating a Temp File, for the list of installed plugins
-REM if not exist "Temp\_Plugins.installed" (echo.No plugins installed.&&goto :End)
+REM if not exist "!_installedPluginsFile!" (echo.No plugins installed yet.&&goto :End)
 
 REM set _Temp=0
-REM for /f "usebackQ tokens=*" %%A in ("Temp\_Plugins.installed") do (if /I "%%~A" == "!_Index_Number!" (set /A _Temp+=1))
+REM for /f "usebackQ tokens=*" %%A in ("!_installedPluginsFile!") do (if /I "%%~A" == "!_Local_ID!" (set /A _Temp+=1))
 echo.This feature will come soon.
 goto :EOF
 
@@ -101,8 +96,8 @@ for /f "skip=2 tokens=1,2,*" %%A in ('reg query HKCU\Environment /v Path') do (S
 @REM REM Adding BatCenter path to Environment variable...
 Echo Adding BATCENTER to PATH...
 rem adding environmental variable to be used later... and to keep length of Path variable limited...
-Echo creating environmental variable... 'batcenter'...
-Setx batcenter "%localappdata%\BatCenter"
+rem Echo creating environmental variable... 'batcenter'...
+rem Setx batcenter "!_BatCenter!"
 
 Setx path "!_UserPath!!_BatCenter!\Files;!_BatCenter!\plugins;"
 @REM reg add HKCU\Environment /v Path /d "!path!;!_BatCenter!;!_BatCenter!\Files;!_BatCenter!\plugins;" /f
@@ -113,17 +108,15 @@ gpupdate /force
 call EnvUpdate.bat
 Goto :EOF
 
+REM ============================== [RESET] ====================================
 :Reset
-del /f /q "!_BatCenter!\Files\hosts.txt" 
-del /f /q "!_BatCenter!\Plugins\*.*"
-del /f /q "!_BatCenter!\Index\*.*"
-del /f /q "!_BatCenter!\Json\*.*"
-del /f /q "!_BatCenter!\Zips\*.*"
-del /f /q "!_BatCenter!\Temp\*.*"
+del /f /q "!_hostFile!"
+for %%A in (!_FolderStructure!) do (if /i "%%~A" NEQ "Files" (rd /s /q "!_BatCenter!\%%~A" >nul 2>nul))
 Echo. BatCenter is Reset to its Initial State...as a New Install!!
 Echo. All Installed plugins/tools are removed...
 goto :EOF
 
+REM ============================ [RESET ALL] ==================================
 :ResetAll
 REM Removing BatCenter from Path...
 set _NewPath=
@@ -151,82 +144,49 @@ echo !_UserPath! | find /i "batcenter" 2>nul >nul && (
 	@REM reg add HKCU\Environment /v Path /d "!_NewPath!" /f 2>nul >nul
 	setx path "!_NewPath!"
 )
-popd
 rem creating another file... as a file can't remove itself...
-echo.@timeout /t 3 >"!temp!\remove_batcenter.bat"
-echo.@rd /s /q "!_BatCenter!" >>"!temp!\remove_batcenter.bat" 
-echo.@exit >> "!temp!\remove_batcenter.bat"
-start "Resetting batcenter" "!temp!\remove_batcenter.bat"
+echo.@timeout /t 3 >"!_resetFile!"
+echo.@rd /s /q "!_BatCenter!" >>"!_resetFile!" 
+echo.@exit >> "!_resetFile!"
+start "Resetting batcenter" "!_resetFile!"
 echo.done
 goto :EOF
 
+REM ============================== [iLIST] ====================================
 :iList
-if not exist "Temp\_Plugins.installed" (
-	dir /b "Zips\*.zip" > "!Temp!\List.txt" 2>nul
-	if /i !Errorlevel! NEQ 0 (echo.No plugins installed && goto :EOF)
-	del /q /f "plugins\*.*" >nul 2>nul
-
-	REM Checking, if fixing of older batcenter SYSTEM is needed...
-	set _Temp=0
-	for /f "tokens=* delims=." %%A in ('dir /b "Zips\*.zip"') do (if %%~nA LSS 100000 (set /A _Temp+=1))
-	if !_Temp! GTR 0 (
-		if exist "Index\id.index" (del /f /q "Index\id.index" >nul 2>nul)
-
-		REM Getting Json files of each host...
-		for /f "tokens=*" %%a in (hosts.txt) do (for %%A in ("id") do (type "Json\%%a.json" | jq ".[] .%%~A" >> "Index\%%~A.index"))
-
-		for /f "tokens=1,2* delims=." %%A in ('dir /b "Zips\*.zip"') do (
-			for /f "tokens=*" %%a in ('ReadLine "Index\id.index" %%~nA') do (set "_GID=%%~a")
-
-			Ren "Zips\%%~nA.zip" "!_GID!.zip" 2>nul >nul
-			)
+if not exist "!_installedPluginsFile!" (
+	dir /b "!_ZipsDir!\*.zip" > "!Temp!\List.txt" 2>nul
+	if /i !Errorlevel! NEQ 0 (
+		echo.No plugins installed yet.
+		echo.If you have recently updated BatCenter, and it is not detecting
+		echo.installed plugins from previous ver, it is recommended to 'reset'
+		echo.your BatCenter installation and start fresh...
+		echo.
+		echo. Run "bat reset" ...
+		goto :EOF
 		)
-
-	for /f "tokens=1,2* delims=." %%A in ('dir /b "Zips\*.zip"') do (
-		REM Checking if the name of the file is - Numeric or alphabet
-		set /A _Temp=%%~nA / 1
-
-		if /i "!_Temp!" NEQ "0" (
-			call :GetLocalID "%%~nA" _Index_Number
-			call :Install_Tracking !_Index_Number!
-			pushd plugins
-			7za e -y "..\Zips\%%~nA.zip" >nul
-			REM Removing Empty Folders...
-			for /f "tokens=*" %%a in ('dir /b /a:d') do (Rd /S /Q "%%~a")
-			popd
-		)
-	)
+	@rem del /q /f "!_pluginsDir!\*.*" >nul 2>nul
 )
-
-if not "%_2%"=="" (
-	if exist "%_BatCenter%\Temp\_%_2%.content" (
-		ReadLine "Index\name.index" %_2%
-		goto :EOF
-	) else (
-		echo %_2% is not installed.
-		goto :EOF
-	)
-) 
 
 REM Tracking Number of installed Plugins in system...
 set _Count=0
 echo. ----------------------- Installed plugins ------------------------
-if exist "Temp\_Plugins.installed" (
-for /f "usebackQ tokens=*" %%A in ("Temp\_Plugins.installed") do (
-	call :GetLocalID %%~A _Local_ID
-	ReadLine "Index\name.index" !_Local_ID!
+if exist "!_installedPluginsFile!" (
+for /f "usebackQ tokens=*" %%A in ("!_installedPluginsFile!") do (
+	call :GetLocalID "%%~A" _Local_ID
+	ReadLine "!_nameFile!" !_Local_ID!
 	set /A _Count+=1
 	)
 )
-if !_Count! == 0 (echo.No plugins installed.)
+if !_Count! == 0 (echo.No plugins installed yet.)
 echo. ------------------------------------------------------------------
 goto :EOF
 
 
 :Detail
-if /i "%_2%" == "" (echo.Missing search term. See 'bat /?'&& goto :End)
-set _Index_Number=!_2!
-call :check_Number !_2! _Error
+if /i "!_2!" == "" (echo.Missing search term. See 'bat /?'&& goto :End)
+set _Local_ID=!_2!
+call :check_Number "!_Local_ID!" _Error
 if /i "!_Error!" NEQ "T" (
 	call :Search _RCount _Result
 	if !_RCount! GTR 1 (
@@ -238,52 +198,48 @@ if /i "!_Error!" NEQ "T" (
 		if not defined _y (set /P "_Temp=See Details? [Y/N]:") else (set _Temp=Y)
 		if /I "!_Temp!" == "Y" (
 		for /L %%A in (0,1,!_RCount!) do (
-			call :GetIndexNumber "!_Result[%%~A]!" _Index_Number
-			call :FetchDetails !_Index_Number!
+			call :GetLocalID "!_Result[%%~A]!" _Local_ID
+			call :FetchDetails !_Local_ID!
 			)
 		)
 		goto :End
 	)
 
-	if !_RCount! EQU 0 (
-		echo.Multiple results found for the search term.
-		echo.Try running 'bat search [Term1] [Term2]'
-		goto :End
-	)
-	call :GetIndexNumber "!_Result[0]!" _Index_Number
+	if !_RCount! EQU 0 (echo.No Result Found.&&goto :End)
+	call :GetLocalID "!_Result[0]!" _Local_ID
 )
 
-REM echo !_Index_Number!
-call :FetchDetails !_Index_Number!
+REM echo !_Local_ID!
+call :FetchDetails !_Local_ID!
 goto :End
 
 REM =============================[ INSTALL ]====================================
 :Install
-REM Looking for the Searched term and returning the Value in _Result variable.
-REM Saving the values of results in an array kind of structure...
-REM E.g: _Result[0], _Result[1] ...
-REM Where, _RCount contains the number of results and _Result is the array name
 if /i "!_2!" == "" (echo.Missing search term. See 'bat /?' && goto :End)
 
-set _Index_Number=!_2!
-call :check_Number !_2! _Error
-if /i "!_Error!" NEQ "T" (
+
+
+set _Local_ID=!_2!
+call :check_Number !_Local_ID! _IsNum
+
+REM If the install parameter is not a number...
+REM then, getting the index number of the given name...
+if /i "!_IsNum!" NEQ "T" (
 	call :Search _RCount _Result
 	if !_RCount! GTR 1 (
 		set /A _RCount-=1
 		echo.Multiple results found for the install term.
-		echo.Try running 'bat search [Term1] [Term2]'
+		echo.refine the search term... 
+		echo.Try running 'bat search [Term1] [Term2] [Term3] ...'
 		echo.
 		set _Temp=N
-		if not defined _y (
-			set /P "_Temp=See Details? [Y/N]:"
-		) else (
-			set _Temp=Y
-		)
+
+		if not defined _y (set /P "_Temp=See Details? [Y/N]:") else (set _Temp=Y)
+		
 		if /i "!_Temp!" == "Y" (
 			for /L %%A in (0,1,!_RCount!) do (
-				call :GetIndexNumber "!_Result[%%~A]!" _Index_Number
-				call :FetchDetails !_Index_Number!
+				call :GetLocalID "!_Result[%%~A]!" _Local_ID
+				call :FetchDetails !_Local_ID!
 			)
 		)
 		goto :End
@@ -293,62 +249,79 @@ if /i "!_Error!" NEQ "T" (
 		echo.No results found matching the install term.
 		goto :End
 	)
-	call :GetIndexNumber "!_Result[0]!" _Index_Number
+	call :GetLocalID "!_Result[0]!" _Local_ID
 )
 
 call :Get_Max_Index _Max_Index
-if !_Index_Number! GTR !_Max_Index! (
-	echo.The specified index ^(!_Index_Number!^) is greater than the plugin count ^(!_Max_Index!^)
+if !_Local_ID! GTR !_Max_Index! (
+	echo.The specified index ^(!_Local_ID!^) is greater than the plugin count ^(!_Max_Index!^)
 	goto :End
 )
 
-call :GetGithubID !_Index_Number! _Github_ID
-
-REM echo !_Index_Number!
-call :FetchDetails !_Index_Number!
+call :GetGithubID !_Local_ID! _Github_ID
+REM echo !_Local_ID!
+call :FetchDetails !_Local_ID!
 echo.Starting download...
-call :Download !_Index_Number!
-<nul set /p ".=Extracting plugin files to %_BatCenter%\Plugins... "
+call :Download !_Local_ID!
+<nul set /p ".=Extracting plugin files... "
 
-pushd Plugins
-7za l "..\Zips\!_Github_ID!.zip" > nul 2>&1 && (echo.done) || (echo.failed)
+REM making sure that the temp folder is empty...
+rd /s /q "!_BatCenter!\Temp" 2>nul >nul
+if not exist "!_BatCenter!\Temp" (md "!_BatCenter!\Temp")
+
+rem 7za l "!_BatCenter!\Zips\!_Github_ID!.zip" > nul 2>&1 
 rem for /f "skip=13 tokens=5*" %%a in (' ^| findstr /c:"."') do (echo %%b)
-7za x -y "..\Zips\!_Github_ID!.zip" >nul
-REM Removing Empty Folders...
+7za e -y "!_BatCenter!\Zips\!_Github_ID!.zip" -o"!_BatCenter!\Temp" >nul 2>&1 && (echo.done) || (echo.failed && Goto :End)
 
+rem the following is an experimental method... prepared by anic17 and kvc together,
+rem it is to install a plugin, without messing up the remote folder structure...
+rem I (kvc) has commented it for now, because i do not see its need right now...
+rem i might be using it for making another sub-command for BatCenter...
+rem
+rem 7za x -y "!_BatCenter!\Zips\!_Github_ID!.zip" -o"!_BatCenter!\Temp" >nul 2>&1 && (echo.done) || (echo.failed && Goto :End)
+REM getting the name of repo's root folder...
+rem Set _RepoRootFolder=
+rem for /f "tokens=*" %%A in ('dir /b /a:d "!_BatCenter!\Temp"') do (set "_RepoRootFolder=%%~A")
 
-for /f "tokens=* delims=" %%A in ('dir /s /b "*.exe" "*.bat" "*.cmd" "*.com"') do (
-    if /i "%%~fA" neq "%~f0" (
-        echo.@echo off > "%%~nA.bat"
-		echo.setlocal >> "%%~nA.bat"
-		echo.set PATH=%%~dp0\wc\;%%PATH%%; >> "%%~nA.bat"
-		echo."%%~dp0\wc\%%~nxA" %%* >> "%%~nA.bat"
-		echo.endlocal >> "%%~nA.bat"
-    )
-)
+rem REM Installing the Repo, without affecting the repo folder structure...
+rem pushd "!_BatCenter!\Temp\!_RepoRootFolder!"
+rem for /f "tokens=*" %%A in ('dir /s /b /a:-d "*.exe" "*.bat" "*.cmd" "*.com"') do (
+rem     echo.@echo off > "%%~nA.bat"
+rem     echo.@setlocal EnableDelayedExpansion >> "%%~nA.bat"
+rem 	 echo.@pushd "%%~dp0!_RepoRootFolder!" >> "%%~nA.bat"
+rem     echo.@for /f "tokens=*" %%%%a in ^('dir /s /b /a:d'^) do ^(set PATH=%%%%a;^!PATH^!;^) >> "%%~nA.bat"
+rem     echo."%%~nxA" %%* >> "%%~nA.bat"
+rem 	 echo.popd >> "%%~nA.bat"
+rem     echo.endlocal >> "%%~nA.bat"
+rem    )
+rem Popd
+rem move /y "!_BatCenter!\Temp\!_RepoRootFolder!" "!_BatCenter!\plugins\"
 
-popd
+move /y "!_BatCenter!\Temp\*" "!_BatCenter!\plugins" >nul 2>nul
+echo.[DONE]
+
 set /p ".=Updating the plugin database... "
-call :Install_Tracking "!_Index_Number!"
-echo.done
+call :Install_Tracking "!_Local_ID!"
+echo.[DONE]
 goto :End
 
+REM ==========================[ INSTALL_TRACKING ]================================
 :Install_Tracking
 setlocal
-set "_Index_Number=%~1"
-call :GetGithubID !_Index_Number! _Github_ID
+set "_Local_ID=%~1"
+call :GetGithubID !_Local_ID! _Github_ID
 
 REM Verifying, if the plugin is already in the list of Installed plugins...
-if exist "Temp\_Plugins.installed" (
+if exist "!_installedPluginsFile!" (
 	set _Temp=0
-	for /f "tokens=*" %%A in ('type "Temp\_Plugins.installed"') do (if /i "%%~A" == "!_Github_ID!" (set /A _Temp+=1))
+	for /f "tokens=*" %%A in ('type "!_installedPluginsFile!"') do (if /i "%%~A" == "!_Github_ID!" (set /A _Temp+=1))
 	if !_Temp! NEQ 0 (goto :EOF)
 	)
 
 REM Adding the ID of the Installed Plugin in INSTALLED PLUGINs list
-echo.!_Github_ID!>> "Temp\_Plugins.installed"
+echo.!_Github_ID!>> "!_installedPluginsFile!"
 
-for /f "tokens=*" %%A in ('ReadLine "Index\name.index" !_Index_Number!') do (
+for /f "tokens=*" %%A in ('ReadLine "!_nameFile!" !_Local_ID!') do (
 	echo. REGISTERING Plugin... %%~A
 )
 
@@ -374,7 +347,7 @@ REM In other words, if a single file is being used by multiple Plugins, then it 
 REM So, when user uninstalls a plugin from system - He/she would not want to accidently make other plugins
 REM DEAD/Unfunctional because of the one dependency. (e.g: batbox.exe is used by many batch plugins)
 
-if exist "Temp\_!_Index_Number!.content" (del /f /q "Temp\_!_Index_Number!.content" >nul 2>nul)
+if exist "Temp\_!_Local_ID!.content" (del /f /q "Temp\_!_Local_ID!.content" >nul 2>nul)
 for /f "skip=16 tokens=1,2,3,4,5,*" %%a in ('7za l "Zips\!_Github_ID!.zip"') do (
 	REM Just simple calculation for showing current progress on console screen...
 	set /A _Temp_Count+=1
@@ -392,7 +365,7 @@ for /f "skip=16 tokens=1,2,3,4,5,*" %%a in ('7za l "Zips\!_Github_ID!.zip"') do 
 		set _Folder=T
 		if /i "!_Temp!" NEQ "!_Temp:D=_!" (set _Folder=T) else (set _Folder=F)
 		if /i "!_Folder!" == "F" (
-			echo %%~nxf>>"Temp\_!_Index_Number!.content"
+			echo %%~nxf>>"Temp\_!_Local_ID!.content"
 			REM Checking if the file is IMMUNE or NOT
 			if exist "plugins\%%~nxf" (
 				REM Checking if the IMMUNE file is already in the DB List or NOT
@@ -409,9 +382,9 @@ goto :EOF
 
 REM ============================================================================
 :Download
-set _Index_Number=%~1
-if /I "!_Index_Number!" == "" (goto :EOF)
-call :GetGithubID !_Index_Number! _Github_ID
+set _Local_ID=%~1
+if /I "!_Local_ID!" == "" (goto :EOF)
+call :GetGithubID !_Local_ID! _Github_ID
 
 REM Downloading the required Repository...
 if not exist "Zips\!_Github_ID!.zip" (Wget "https://github.com/!_RepoFullName:"=!/archive/!_RepoBranch:"=!.zip" -O "Zips\!_Github_ID!.zip" -q --tries=5 --show-progress --timeout=5) else (
@@ -424,7 +397,7 @@ if not exist "Zips\!_Github_ID!.zip" (Wget "https://github.com/!_RepoFullName:"=
 goto :EOF
 
 REM ============================================================================
-:GetIndexNumber [_Repo_Name_String_With_Index] [_VariableName]
+:GetLocalID [_Repo_Name_String_With_Index] [_VariableName]
 for /f "tokens=1* delims=[" %%A in ("%~1") do for /f "tokens=1* delims=]" %%X in ("%%A") do (set "%~2=%%X")
 goto :EOF
 
@@ -437,18 +410,18 @@ set "%~2=!_Result:~1!"
 goto :EOF
 
 REM ============================================================================
-:GetGithubID [_Index_Number] [_VariableName]
+:GetGithubID [_Local_ID] [_VariableName]
 for /f "tokens=*" %%A in ('ReadLine "Index\id.index" %~1') do (set "%~2=%%~A")
 goto :EOF
 
 REM ============================================================================
 :FetchDetails [Local_ID]
-set _Index_Number=%~1
-if not defined _Index_Number (goto :EOF)
+set _Local_ID=%~1
+if not defined _Local_ID (goto :EOF)
 
 REM Checking the max number of the plugins available
 call :Get_Max_Index _Max_Index
-if !_Index_Number! GTR !_Max_Index! (echo.The specified index ^(!_Index_Number!^) is greater than the plugin count ^(!_Max_Index!^) && goto:EOF)
+if !_Local_ID! GTR !_Max_Index! (echo.The specified index ^(!_Local_ID!^) is greater than the plugin count ^(!_Max_Index!^) && goto:EOF)
 for /f "tokens=2 delims=:" %%A in ('chcp') do set "codepage=%%A"
 chcp 65001 > nul
 
@@ -466,7 +439,7 @@ for %%A in (!_IndexFiles!) do (
 	if /i "%%~A" == "created_at" (set _var=_RepoInit)
 	if /i "%%~A" == "updated_at" (set _var=_RepoUpdate)
 	if /i "%%~A" == "id" (set _var=_RepoID)
-	ReadLine "Index\%%~A.index" !_Index_Number! > "!Temp!\tmp.temp"
+	ReadLine "Index\%%~A.index" !_Local_ID! > "!Temp!\tmp.temp"
 	set /P !_var!= < "!Temp!\tmp.temp"
 )
 
@@ -495,7 +468,7 @@ if !_Len! GEQ 50 (set _RepoDes=!_RepoDes:~0,50!...)
 echo. --------------------------------------------------------------------
 echo. Name:			!_RepoName:~1!
 echo. Owner:			!_RepoOwner!
-echo. Local-ID:		!_Index_Number!
+echo. Local-ID:		!_Local_ID!
 echo. Github-ID:		!_RepoID!
 echo. Created:		!_RepoInit:~1,10!
 echo. Updated-On:		!_RepoUpdate:~1,10!
@@ -505,7 +478,7 @@ echo. Size:			!_RepoSize! KBs
 echo. Description:		!_RepoDes!
 echo. Link:			!_RepoLink:"=!
 echo. --------------------------------------------------------------------
-if /i "!_1!" == "Detail" (echo.Install it with: "bat install !_Index_Number!")
+if /i "!_1!" == "Detail" (echo.Install it with: "bat install !_Local_ID!")
 chcp !codepage! > nul
 goto :End
 
@@ -555,12 +528,10 @@ if !_online_ver! GTR !_ver! (
         echo setlocal EnableDelayedExpansion
         echo @title Updating BatCenter...
         echo @echo.Extracting files...
-        echo @pushd "!_BatCenter!\files"
         echo @7za e -y "!_BatCenter!\Zips\BatCenter.zip" 2^>nul ^>nul
         echo @echo.Extraction complete.
         echo @Echo Removing Empty Folders...
         echo @for /f "tokens=*" %%%%A in ^('dir /b /a:d'^) do ^(Rd /S /Q "%%%%~A" ^>nul 2^>nul ^)
-        echo @popd
         echo @del /f /q "!_BatCenter!\Zips\BatCenter.zip"
         echo @echo.Done
         echo exit /b
@@ -570,15 +541,15 @@ if !_online_ver! GTR !_ver! (
 
 REM Removing Older Index Files...
 del /f /q "!_BatCenter!\Index\*.*" >nul 2>nul
-del /f /q "!_BatCenter!\Files\hosts.txt" >nul 2>nul
+del /f /q "!_hostFile!" >nul 2>nul
 
 REM Need to check, if the Basic Json files are present...Otherwise, we'll update!
-if not exist "!_BatCenter!\Files\hosts.txt" (Wget "https://raw.githubusercontent.com/Batch-Man/BatCenter/main/Install/hosts.txt" -O "!_BatCenter!\Files\hosts.txt" -q --tries=5 --show-progress --timeout=5)
+if not exist "!_hostFile!" (Wget "https://raw.githubusercontent.com/Batch-Man/BatCenter/main/Install/hosts.txt" -O "!_hostFile!" -q --tries=5 --show-progress --timeout=5)
 
-if /i "!_2!" NEQ "" (find /i "!_2!" "!_BatCenter!\Files\hosts.txt" >nul 2>nul && (echo. Already in DB...) || (echo.!_2!>>"!_BatCenter!\Files\hosts.txt"))
+if /i "!_2!" NEQ "" (find /i "!_2!" "!_hostFile!" >nul 2>nul && (echo. Already in DB...) || (echo.!_2!>>"!_hostFile!"))
 
 REM Getting Json files of each host...
-for /f "usebackq tokens=*" %%a in ("!_BatCenter!\Files\hosts.txt") do (
+for /f "usebackq tokens=*" %%a in ("!_hostFile!") do (
 	wget "https://api.github.com/users/%%a/repos?per_page=100000&page=1" -O "!_BatCenter!\Json\%%a.json" -q --tries=5 --show-progress --timeout=5
 
 	REM Indexing Details...
@@ -590,13 +561,13 @@ set _Count=0
 
 REM Indexing the main name.json file... 
 del /f /q "!Temp!\Tmp.index" >nul 2>nul
-for /f "usebackQ tokens=*" %%A in ("!_BatCenter!\Index\name.index") do (
+for /f "usebackQ tokens=*" %%A in ("!_nameFile!") do (
 	set /A _Count+=1
 	set _Temp_Line=%%~A
 	if defined _Temp_Line (echo.[!_Count!]-!_Temp_Line:-= !>>"!Temp!\Tmp.index")
 	)
 
-copy /y "!Temp!\Tmp.index" "!_BatCenter!\Index\name.index" >nul 2>nul
+copy /y "!Temp!\Tmp.index" "!_nameFile!" >nul 2>nul
 REM Keeping an eye on the Max Number of Plugins available...
 set _Max_Index=!_Count!
 echo.!_Max_Index!>"!_BatCenter!\files\_Max_Index.Count"
@@ -637,6 +608,8 @@ If /i "%~1" NEQ "" (set %~1=!_Return!)
 Exit /b !_Return!
 
 :VerifyAndFixBatCenterFiles
+IF NOT EXIST "!_BatCenter!" (MD "!_BatCenter!")
+
 REM Verifying the Required folder tree for files...
 for %%A in (!_FolderStructure!) do (if not exist "!_BatCenter!\%%~A" (md "!_BatCenter!\%%~A"))
 
@@ -651,8 +624,8 @@ Goto :EOF
 REM ================================[LIST]======================================
 :List
 set _Count=0
-if not exist "!_BatCenter!\Index\name.index" (echo.No index file. Please run 'bat update' command.&&goto :End)
-type "!_BatCenter!\Index\name.index"
+if not exist "!_nameFile!" (echo.No index file. Please run 'bat update' command.&&goto :End)
+type "!_nameFile!"
 goto :End
 
 REM ===============================[SEARCH]=====================================
@@ -666,7 +639,7 @@ set _Count=2
 
 REM copying index file for later refined search...
 REM copy /y "Index\full_name.index" "%Temp%\tmp.index" >nul 2>nul
-copy /y "Index\name.index" "%Temp%\tmp.index" >nul 2>nul
+copy /y "!_nameFile!" "%Temp%\tmp.index" >nul 2>nul
 :SearchLoop
 if /i "!_%_Count%!" == "" (goto :SearchNext)
 Find /i "!_%_Count%!" "!Temp!\tmp.index" > "!Temp!\tmp2.index"
@@ -690,7 +663,7 @@ setlocal
 REM Checking the max number of the plugins available
 if exist "Files\_Max_Index.count" (set /p _Max_Index=<"Files\_Max_Index.count") else (
 	set _Max_Index=0
-	for /F "usebackq tokens=*" %%A in ("Index\name.index") do (set /A _Max_Index+=1)
+	for /F "usebackq tokens=*" %%A in ("!_nameFile!") do (set /A _Max_Index+=1)
 	echo.!_Max_Index!>"Files\_Max_Index.count"
 	)
 Endlocal && set "%~1=%_Max_Index%"
@@ -698,7 +671,6 @@ goto :EOF
 
 REM ==================================== [End] =================================
 :End
-Popd
 Endlocal
 Exit /b
 REM ============================================================================
